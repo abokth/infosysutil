@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fileset-config file-format-version="1.2.0" simple-config="true">
+    <local-check-config name="Infosys code style" location="/common/pkg/checkstyle.xml" type="project" description="The &quot;infosys codestyle&quot;, originally defined in the KOPPS project.">
+        <property name="checkstyle.cache.file" value="/tmp/infosysutil.checkstyle.cache"/>
+        <additional-data name="protect-config-file" value="false"/>
+    </local-check-config>
+    <fileset name="all" enabled="true" check-config-name="Infosys code style" local="true">
+        <file-match-pattern match-pattern="." include-pattern="true"/>
+    </fileset>
+</fileset-config>
