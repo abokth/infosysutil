@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="infosysutil">
+    <property name="version" value="0.1" description="Version number, increase for any non-trivial change."/>
+
+    <description>This is ${ant.project.name} version ${version}, some simple utilities for infosys.</description>
+
+    <!-- jar files that can be needed for building or testing, but should not be included in the dist. -->
+    <fileset id="classpath.junit" dir="../common/external/java/lib">
+        <include name="junit4.jar"/>
+    </fileset>
+
+    <!-- Build a jar file, including a clean build from java sources, excluding test code. -->
+	<target name="jar" depends="test"
+	    	description="Build a jar file of this package.">
+	    <property name="jarfile" value="${ant.project.name}-${version}.jar"/>
+	    <mkdir dir="tmpbin"/>
+	    <javac srcdir="src" destdir="tmpbin" target="1.5" />
+	    <jar destfile="${ant.project.name}-${version}.jar" basedir="tmpbin"/>
+	    <delete dir="tmpbin"/>
+	    <echo>Built ${jarfile}</echo>
+	</target>
+
+    <target name="test" description="Run all unit tests">
+        <!-- this expects class files to be compiled (by eclipse or similar) to ./bin -->
+        <junit printsummary="no" haltonfailure="yes">
+            <formatter type="plain" usefile="no"/>
+            <classpath>
+                <pathelement path="bin"/>
+                <fileset refid="classpath.junit"/>
+            </classpath>
+            
+            <batchtest>
+                <fileset dir="test">
+                    <include name="**/*Test.java"/>
+                </fileset>
+            </batchtest>
+        </junit>
+        <echo>${ant.project.name} ${version} testing ok</echo>
+    </target>
+</project>
