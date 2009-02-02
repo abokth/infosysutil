@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="infosysutil">
-    <property name="version" value="0.1" description="Version number, increase for any non-trivial change."/>
+    <property name="version" value="0.2" description="Version number, increase for any non-trivial change."/>
 
     <description>This is ${ant.project.name} version ${version}, some simple utilities for infosys.</description>
 
@@ -14,7 +14,11 @@
 	    	description="Build a jar file of this package.">
 	    <property name="jarfile" value="${ant.project.name}-${version}.jar"/>
 	    <mkdir dir="tmpbin"/>
-	    <javac srcdir="src" destdir="tmpbin" target="1.5" />
+	    <javac srcdir="src" destdir="tmpbin" target="1.5">
+	        <classpath>
+        	    <fileset refid="classpath.junit"/>
+	        </classpath>
+	    </javac>
 	    <jar destfile="${ant.project.name}-${version}.jar" basedir="tmpbin"/>
 	    <delete dir="tmpbin"/>
 	    <echo>Built ${jarfile}</echo>
