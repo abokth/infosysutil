@@ -1,4 +1,4 @@
-package se.kth.infosys.util;
+package se.kth.sys.util;
 
 import java.util.Iterator;
 import java.util.LinkedList;
