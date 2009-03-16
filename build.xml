@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="infosysutil">
-    <property name="version" value="0.2" description="Version number, increase for any non-trivial change."/>
-
+    <property name="version" value="0.3-PRE" description="Version number, increase for any non-trivial change."/>
+	<property name="java.target" value="1.5" description="Java version target for builds."/>
     <description>This is ${ant.project.name} version ${version}, some simple utilities for infosys.</description>
 
     <!-- jar files that can be needed for building or testing, but should not be included in the dist. -->
@@ -10,7 +10,7 @@
     </fileset>
 
     <!-- Build a jar file, including a clean build from java sources, excluding test code. -->
-	<target name="jar" depends="test"
+	<target name="jar" depends="compile, test"
 	    	description="Build a jar file of this package.">
 	    <property name="jarfile" value="${ant.project.name}-${version}.jar"/>
 	    <mkdir dir="tmpbin"/>
@@ -21,24 +21,47 @@
 	    </javac>
 	    <jar destfile="${ant.project.name}-${version}.jar" basedir="tmpbin"/>
 	    <delete dir="tmpbin"/>
-	    <echo>Built ${jarfile}</echo>
+	    <echo message="Built ${jarfile}" level="info"/>
 	</target>
 
-    <target name="test" description="Run all unit tests">
+    <target name="test" depends="compile-with-tests"
+            description="Run all unit tests">
         <!-- this expects class files to be compiled (by eclipse or similar) to ./bin -->
         <junit printsummary="no" haltonfailure="yes">
             <formatter type="plain" usefile="no"/>
             <classpath>
                 <pathelement path="bin"/>
+                <pathelement path="test/classes"/>
                 <fileset refid="classpath.junit"/>
             </classpath>
             
             <batchtest>
-                <fileset dir="test">
+                <fileset dir="test/java">
                     <include name="**/*Test.java"/>
                 </fileset>
             </batchtest>
         </junit>
-        <echo>${ant.project.name} ${version} testing ok</echo>
+        <echo message="${ant.project.name} ${version} testing ok" level="info"/>
+    </target>
+
+    <target name="compile">
+        <delete dir="bin"/>
+	    <mkdir dir="bin"/>
+		<javac srcdir="src/java" destdir="bin" debug="on" target="${java.target}">
+		    <classpath>
+		        <fileset refid="classpath.junit"/>
+		    </classpath>
+		</javac>
+	</target>
+
+    <target name="compile-with-tests" depends="compile">
+        <delete dir="test/classes"/>
+        <mkdir dir="test/classes"/>
+        <javac srcdir="test/java" destdir="test/classes" debug="on" target="${java.target}">
+            <classpath location="bin"/>
+            <classpath>
+		        <fileset refid="classpath.junit"/>
+            </classpath>
+        </javac>
     </target>
 </project>
