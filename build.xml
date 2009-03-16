@@ -2,12 +2,22 @@
 <project name="infosysutil">
     <property name="version" value="0.3-PRE" description="Version number, increase for any non-trivial change."/>
 	<property name="java.target" value="1.5" description="Java version target for builds."/>
+	<property name="cobertura.dir" location="test/cobertura-1.9.1"/>
     <description>This is ${ant.project.name} version ${version}, some simple utilities for infosys.</description>
 
     <!-- jar files that can be needed for building or testing, but should not be included in the dist. -->
     <fileset id="classpath.junit" dir="../common/external/java/lib">
         <include name="junit4.jar"/>
     </fileset>
+
+    <!-- External task definitions for the coverage test utility cobertura -->
+    <path id="cobertura.classpath">
+      <fileset dir="${cobertura.dir}">
+        <include name="cobertura.jar"/>
+        <include name="lib/**/*.jar"/>
+      </fileset>
+    </path>
+    <taskdef classpathref="cobertura.classpath" resource="tasks.properties" />
 
     <!-- Build a jar file, including a clean build from java sources, excluding test code. -->
 	<target name="jar" depends="compile, test"
@@ -63,5 +73,57 @@
 		        <fileset refid="classpath.junit"/>
             </classpath>
         </javac>
+    </target>
+
+    <!-- Runs test while checking coverage, and build a html report. -->
+    <target name="test-coverage" depends="compile-with-tests">
+    	<property name="coveragereport.dir" value="test/reports/coverage"/>
+        <property name="cobertura.data" value="${java.io.tmpdir}/cobertura-${ant.project.name}.ser"/>
+        <property name="junitreport.dir" value="test/reports/junit"/>
+        <property name="instrumented.dir" value="test/instrumented"/>
+        
+     	<delete dir="${junitreport.dir}"/>
+     	<mkdir dir="${junitreport.dir}"/>
+        
+        <delete dir="${instrumented.dir}"/>
+		<cobertura-instrument todir="${instrumented.dir}" datafile="${cobertura.data}">
+            <includeClasses regex=".*" />
+
+            <instrumentationClasspath>
+				<pathelement location="bin"/>
+            </instrumentationClasspath>
+        </cobertura-instrument>
+        
+      	<!-- Almost copy of target unittest.  It would be nice to call it, but we need to use the right dirs -->
+		<junit fork="yes" forkmode="once" printsummary="no" haltonfailure="yes">
+            <sysproperty key="net.sourceforge.cobertura.datafile" file="${cobertura.data}"/>
+			<formatter type="plain" usefile="no"/>
+			<formatter type="xml"/>
+		    <classpath location="${instrumented.dir}"/>
+		    <classpath location="test/classes"/>
+            <classpath>
+                <fileset refid="classpath.junit"/>
+            </classpath>
+			<classpath refid="cobertura.classpath"/>
+			
+			<batchtest todir="${junitreport.dir}">
+				<fileset dir="test/java">
+					<include name="**/*Test.java"/>
+					<!-- Broken test: -->
+					<exclude name="se/kth/ite/portal/EmployeeUserTest.java"/>
+				</fileset>
+			</batchtest>
+		</junit>
+
+      	<delete dir="${coveragereport.dir}"/>
+        <mkdir dir="${coveragereport.dir}"/>
+        <!-- A nice human-readable report. -->
+        <cobertura-report format="html" destdir="${coveragereport.dir}"
+            			  srcdir="src/java" datafile="${cobertura.data}"/>
+        <!-- A nice computer-readable report, used by hudson. -->
+        <cobertura-report format="xml" destdir="${coveragereport.dir}"
+            			  srcdir="src/java" datafile="${cobertura.data}"/>
+        <delete dir="${instrumented.dir}"/>
+        <delete file="${cobertura.data}"/>
     </target>
 </project>
