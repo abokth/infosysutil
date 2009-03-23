@@ -3,8 +3,10 @@ package se.kth.sys.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static se.kth.sys.util.TestUtil.assertEqualsSet;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.junit.Test;
 
@@ -40,6 +42,16 @@ public class StringUtilTest {
     @Test
     public void testJoinNum() {
         assertEquals("1, 2, 3", StringUtil.join(", ", Arrays.asList(1, 2, 3)));
+    }
+
+    @Test
+    public void testFillEmpty() {
+        assertEquals(Collections.emptyList(), StringUtil.fill(1, 0));
+    }
+
+    @Test
+    public void testFill() {
+        assertEqualsSet(Arrays.asList(1, 1, 1), StringUtil.fill(1, 3));
     }
 
     /**
