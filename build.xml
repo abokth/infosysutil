@@ -119,10 +119,10 @@
         <mkdir dir="${coveragereport.dir}"/>
         <!-- A nice human-readable report. -->
         <cobertura-report format="html" destdir="${coveragereport.dir}"
-            			  srcdir="src/java" datafile="${cobertura.data}"/>
+            			  srcdir="${basedir}/src/java" datafile="${cobertura.data}"/>
         <!-- A nice computer-readable report, used by hudson. -->
         <cobertura-report format="xml" destdir="${coveragereport.dir}"
-            			  srcdir="src/java" datafile="${cobertura.data}"/>
+            			  srcdir="${basedir}/src/java" datafile="${cobertura.data}"/>
         <delete dir="${instrumented.dir}"/>
         <delete file="${cobertura.data}"/>
     </target>
