@@ -91,4 +91,13 @@ public class MultiMapTest {
 
         assertEqualsSet(Collections.<String>emptyList(), map.get(3));
     }
+
+    @Test
+    public void testContainsKey() {
+        MultiMap<Integer, String> map = new MultiMap<Integer, String>();
+        map.put(1, "one");
+
+        assertTrue(map.containsKey(1));
+        assertFalse(map.containsKey(2));
+    }
 }

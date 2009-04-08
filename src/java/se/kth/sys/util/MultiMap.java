@@ -18,6 +18,8 @@ import java.util.Set;
  */
 public class MultiMap<K, V> {
 
+    private Map<K, List<V>> map;
+
     /** Create a new (empty) MultiMap. */
     public MultiMap() {
         map = new HashMap<K, List<V>>();
@@ -115,5 +117,11 @@ public class MultiMap<K, V> {
         return result;
     }
 
-    private Map<K, List<V>> map;
+    /**
+     * @param key a key to check for
+     * @return true if the key exists in this map
+     */
+    public boolean containsKey(K key) {
+        return map.containsKey(key);
+    }
 }
