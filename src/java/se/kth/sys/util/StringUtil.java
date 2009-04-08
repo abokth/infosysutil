@@ -50,7 +50,7 @@ public final class StringUtil {
 
     /**
      * Check if two strings are equal.  If both strings are null, they are considered equal.
-     * If one of the strings are null, they are not equal.  Otherwise {@link String.equals(String)} decides.
+     * If one of the strings are null, they are not equal.  Otherwise {@link String#equals(Object)} decides.
      * @param a one string.
      * @param b another string.
      * @return true if the strings are equal.
