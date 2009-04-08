@@ -23,14 +23,13 @@
 	<target name="jar" depends="compile, test"
 	    	description="Build a jar file of this package.">
 	    <property name="jarfile" value="${ant.project.name}-${version}.jar"/>
-	    <mkdir dir="tmpbin"/>
-	    <javac srcdir="src" destdir="tmpbin" target="1.5">
-	        <classpath>
-        	    <fileset refid="classpath.junit"/>
-	        </classpath>
-	    </javac>
-	    <jar destfile="${ant.project.name}-${version}.jar" basedir="tmpbin"/>
-	    <delete dir="tmpbin"/>
+	    <javadoc sourcepath="src/java" destdir="javadoc">
+	        <classpath><fileset refid="classpath.junit"/></classpath>
+	    </javadoc>
+	    <jar destfile="${ant.project.name}-${version}.jar" index="true" basedir="bin">
+	        <zipfileset dir="javadoc" prefix="javadoc"/>
+	    </jar>
+	    <delete dir="javadoc"/>
 	    <echo message="Built ${jarfile}" level="info"/>
 	</target>
 
