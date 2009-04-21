@@ -1,5 +1,6 @@
 package se.kth.sys.util;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -7,11 +8,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-
+/**
+ * A Map-like class that can hold several items per key.
+ */
 public class MultivalueMap<K extends Comparable<K>,V>
 {
 	private Map<K,List<V>> map;
 	
+	/**
+	 * Orders according to the natural ordering of the items but also handles null.
+	 *
+	 */
 	public class NaturalAndNullComparator implements Comparator<K> {
 
 		public int compare(K o1, K o2) {
@@ -29,16 +36,22 @@ public class MultivalueMap<K extends Comparable<K>,V>
 		
 	}
 	
+    /** Create a new (empty) MultivalueMap. */
 	public MultivalueMap ()
 	{
 		map=new TreeMap<K, List<V>>(new NaturalAndNullComparator());
 	}
 	
+    /** Make this map empty. */
 	public void clear()
 	{
 		map.clear();
 	}
 
+    /**
+     * @param key a key to check for
+     * @return true if the key exists in this map
+     */
 	public boolean containsKey(K key)
 	{
 		return map.containsKey(key);
@@ -55,6 +68,11 @@ public class MultivalueMap<K extends Comparable<K>,V>
 		return false;
 	}
 
+    /**
+     * Get the set of values for a key.
+     * @param key the key to get values for
+     * @return A list with the values, or an empty list.
+     */
 	public List<V> get(K key)
 	{
 		if(map.containsKey(key))
@@ -65,16 +83,29 @@ public class MultivalueMap<K extends Comparable<K>,V>
 		return new LinkedList<V>();
 	}
 
+    /**
+     * Check if this MultivalueMap is empty.
+     */
 	public boolean isEmpty()
 	{
 		return map.isEmpty();
 	}
 
+    /**
+     * Get the set of keys that is in this map.
+     * @return the set of keys
+     */
 	public Set<K> keySet()
 	{
 		return map.keySet();
 	}
 
+    /**
+     * Put a value in the map.  It is possible to put multiple values
+     * with the same key in the map.
+     * @param key the key to put
+     * @param value the value add for key
+     */
 	public void put(K key, V value)
 	{
 		if(!map.containsKey(key))
@@ -100,6 +131,10 @@ public class MultivalueMap<K extends Comparable<K>,V>
 		map.get(key).addAll(value);
 	}
 	
+    /**
+     * Remove all values associated with a specific key from the map.
+     * @param key the key to clear.
+     */
 	public List<V> remove(K key)
 	{
 		return map.remove(key);
@@ -112,14 +147,31 @@ public class MultivalueMap<K extends Comparable<K>,V>
 		}
 	}
 
-	public int size()
-	{
-		throw new UnsupportedOperationException();
-	}
+    /**
+     * Count the total number of values for all keys.
+     * @return the number of values
+     */
+    public int size() {
+        int result = 0;
+        for (List<V> vlist : map.values()) {
+            result += vlist.size();
+        }
+        return result;
+    }
 
+    /**
+     * Get a single Collection containing all the values, regardless of key, in this MultivalueMap.
+     * @return the new summary collection
+     */
 	public Collection<V> values()
 	{
-		throw new UnsupportedOperationException();
+        Collection<V> result = new ArrayList<V>();
+        for (List<V> vlist : map.values()) {
+            for (V value : vlist) {
+                result.add(value);
+            }
+        }
+        return result;
 	}
 	
 	public String toString()
