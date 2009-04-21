@@ -7,14 +7,18 @@ import static se.kth.sys.util.TestUtil.assertEqualsSet;
 
 import java.util.Arrays;
 
+import org.junit.Test;
+
 public class MultivalueMapTest
 {
+    @Test
 	public void testCreate()
 	{
 		MultivalueMap<String, String> map=new MultivalueMap<String, String>();
 		assertTrue(map.isEmpty());
 	}
 
+    @Test
 	public void testThings()
 	{
 		MultivalueMap<String, String> map=new MultivalueMap<String, String>();
@@ -32,6 +36,7 @@ public class MultivalueMapTest
 		assertEquals(Arrays.asList(new String[]{"gurka","squash"}), map.asMap().get("nyckel"));
 	}
 
+    @Test
 	public void testPutAll()
 	{
 		MultivalueMap<String, String> map=new MultivalueMap<String, String>();
