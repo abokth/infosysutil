@@ -15,6 +15,7 @@ import java.util.Set;
  * @param <K> the key type
  * @param <V> the value type
  * @author Rasmus Kaj &lt;kaj@kth.se&gt;
+ * @deprecated Use se.kth.sys.util.MultivalueMap instead
  */
 public class MultiMap<K, V> {
 
