@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+
 /**
  * A Map-like class that can hold several items per key.
  * @param <K> Type of keys
@@ -108,6 +109,16 @@ public class MultivalueMap<K extends Comparable<K>, V> {
 
     public void putAll(Map<? extends K, ? extends V> m) {
         throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Copies all mappings from the specified map to this map.
+     * @param values mappings to be stored in this map.
+     */
+    public void putAll(MultivalueMap<K, V> values) {
+        for (K key : values.keySet()) {
+            putAll(key, values.get(key));
+        }
     }
 
     public void putAll(K key, Collection<V> value) {

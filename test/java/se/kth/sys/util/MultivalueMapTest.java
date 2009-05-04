@@ -60,6 +60,29 @@ public class MultivalueMapTest {
     }
 
     @Test
+    public void testPutAllFromOtherMultivalueMap() {
+        MultivalueMap<String, String> map = new MultivalueMap<String, String>();
+        map.put("nyckel", "gurka");
+        map.put("nyckel", "squash");
+        map.put("nyckel2", "hej");
+        MultivalueMap<String, String> map2 = new MultivalueMap<String, String>();
+        map2.put("nyckel2", "t1");
+        map2.put("nyckel3", "d1");
+        map2.put("nyckel3", "d2");
+        map.putAll(map2);
+        assertEqualsSet(new String[]{"nyckel", "nyckel2", "nyckel3"}, map.keySet());
+        assertTrue(map.containsKey("nyckel"));
+        assertFalse(map.containsKey("jordgubbe"));
+        assertTrue(map.containsValue("gurka"));
+        assertTrue(map.containsValue("squash"));
+        assertTrue(map.containsValue("hej"));
+        assertFalse(map.containsValue("jordgubbe"));
+        assertEquals(Arrays.asList("gurka", "squash"), map.get("nyckel"));
+        assertEquals(Arrays.asList("hej", "t1"), map.get("nyckel2"));
+        assertEquals(Arrays.asList("d1", "d2"), map.get("nyckel3"));
+    }
+
+    @Test
     public void testDistinctValues() {
         MultivalueMap<Integer, String> map = new MultivalueMap<Integer, String>();
         map.put(1, "one");
