@@ -11,53 +11,53 @@ import java.util.Collections;
 
 import org.junit.Test;
 
-public class MultivalueMapTest
-{
-    @Test
-	public void testCreate()
-	{
-		MultivalueMap<String, String> map=new MultivalueMap<String, String>();
-		assertTrue(map.isEmpty());
-	}
+/**
+ * Unit tests for {@link MultivalueMap}.
+ */
+public class MultivalueMapTest {
 
     @Test
-	public void testThings()
-	{
-		MultivalueMap<String, String> map=new MultivalueMap<String, String>();
-		map.put("nyckel", "gurka");
-		map.put("nyckel", "squash");
-		map.put("nyckel2", "hej");
-		assertEqualsSet(new String[]{"nyckel","nyckel2"}, map.keySet());
-		assertTrue(map.containsKey("nyckel"));
-		assertFalse(map.containsKey("jordgubbe"));
-		assertTrue(map.containsValue("gurka"));
-		assertTrue(map.containsValue("squash"));
-		assertTrue(map.containsValue("hej"));
-		assertFalse(map.containsValue("jordgubbe"));
-		assertEquals(Arrays.asList(new String[]{"gurka","squash"}), map.get("nyckel"));
-		assertEquals(Arrays.asList(new String[]{"gurka","squash"}), map.asMap().get("nyckel"));
-	}
+    public void testCreate() {
+        MultivalueMap<String, String> map = new MultivalueMap<String, String>();
+        assertTrue(map.isEmpty());
+    }
 
     @Test
-	public void testPutAll()
-	{
-		MultivalueMap<String, String> map=new MultivalueMap<String, String>();
-		map.put("nyckel", "gurka");
-		map.put("nyckel", "squash");
-		map.put("nyckel2", "hej");
-		map.putAll("nyckel2", Arrays.asList("t1", "t2"));
-		map.putAll("nyckel3", Arrays.asList("d1", "d2"));
-		assertEqualsSet(new String[]{"nyckel","nyckel2","nyckel3"}, map.keySet());
-		assertTrue(map.containsKey("nyckel"));
-		assertFalse(map.containsKey("jordgubbe"));
-		assertTrue(map.containsValue("gurka"));
-		assertTrue(map.containsValue("squash"));
-		assertTrue(map.containsValue("hej"));
-		assertFalse(map.containsValue("jordgubbe"));
-		assertEquals(Arrays.asList(new String[]{"gurka","squash"}), map.get("nyckel"));
-		assertEquals(Arrays.asList(new String[]{"hej","t1","t2"}), map.get("nyckel2"));
-		assertEquals(Arrays.asList(new String[]{"d1","d2"}), map.get("nyckel3"));
-	}
+    public void testThings() {
+        MultivalueMap<String, String> map = new MultivalueMap<String, String>();
+        map.put("nyckel", "gurka");
+        map.put("nyckel", "squash");
+        map.put("nyckel2", "hej");
+        assertEqualsSet(new String[]{"nyckel", "nyckel2"}, map.keySet());
+        assertTrue(map.containsKey("nyckel"));
+        assertFalse(map.containsKey("jordgubbe"));
+        assertTrue(map.containsValue("gurka"));
+        assertTrue(map.containsValue("squash"));
+        assertTrue(map.containsValue("hej"));
+        assertFalse(map.containsValue("jordgubbe"));
+        assertEquals(Arrays.asList(new String[]{"gurka", "squash"}), map.get("nyckel"));
+        assertEquals(Arrays.asList(new String[]{"gurka", "squash"}), map.asMap().get("nyckel"));
+    }
+
+    @Test
+    public void testPutAll() {
+        MultivalueMap<String, String> map = new MultivalueMap<String, String>();
+        map.put("nyckel", "gurka");
+        map.put("nyckel", "squash");
+        map.put("nyckel2", "hej");
+        map.putAll("nyckel2", Arrays.asList("t1", "t2"));
+        map.putAll("nyckel3", Arrays.asList("d1", "d2"));
+        assertEqualsSet(new String[]{"nyckel", "nyckel2", "nyckel3"}, map.keySet());
+        assertTrue(map.containsKey("nyckel"));
+        assertFalse(map.containsKey("jordgubbe"));
+        assertTrue(map.containsValue("gurka"));
+        assertTrue(map.containsValue("squash"));
+        assertTrue(map.containsValue("hej"));
+        assertFalse(map.containsValue("jordgubbe"));
+        assertEquals(Arrays.asList(new String[]{"gurka", "squash"}), map.get("nyckel"));
+        assertEquals(Arrays.asList(new String[]{"hej", "t1", "t2"}), map.get("nyckel2"));
+        assertEquals(Arrays.asList(new String[]{"d1", "d2"}), map.get("nyckel3"));
+    }
 
     @Test
     public void testDistinctValues() {
