@@ -1,10 +1,12 @@
 package se.kth.sys.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * Utility methods for tests.
@@ -93,4 +95,15 @@ public final class TestUtil {
         assertEquals(Arrays.asList(expected), actual);
     }
 
+    /**
+     * Test that a given collection contains a specific item.
+     * @param <T> type of items
+     * @param item the expected item
+     * @param list the actual collection
+     */
+    public static <T> void assertContains(T item, Collection<T> list) {
+        if (!list.contains(item)) {
+            fail("The item " + item + " is missing from collection: " + StringUtil.join(", ", list));
+        }
+    }
 }
