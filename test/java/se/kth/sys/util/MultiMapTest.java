@@ -14,6 +14,7 @@ import org.junit.Test;
  * Tests for {@link MultiMap}.
  * @author Rasmus Kaj &lt;kaj@kth.se&gt;
  */
+@Deprecated
 public class MultiMapTest {
 
     @Test
