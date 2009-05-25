@@ -55,7 +55,7 @@ public class StringUtilTest {
     }
 
     /**
-     * Test for {@link StringUtil.euqals}.
+     * Test for {@link StringUtil.equals}.
      */
     @Test
     public void testEquals() {
