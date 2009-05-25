@@ -98,11 +98,23 @@ public final class TestUtil {
      * Test that a given collection contains a specific item.
      * @param <T> type of items
      * @param item the expected item
-     * @param list the actual collection
+     * @param actual the actual collection
      */
-    public static <T> void assertContains(T item, Collection<T> list) {
-        if (!list.contains(item)) {
-            fail("The item " + item + " is missing from collection: " + StringUtil.join(", ", list));
+    public static <T> void assertContains(T item, Collection<T> actual) {
+        if (!actual.contains(item)) {
+            fail("The item <" + item + "> is missing from collection <" + StringUtil.join(", ", actual) + ">");
+        }
+    }
+
+    /**
+     * Test that a given collection does not contain a specific item.
+     * @param <T> type of items
+     * @param item the unexpected item
+     * @param actual the actual collection
+     */
+    public static <T> void assertContainsNot(T item, Collection<T> actual) {
+        if (actual.contains(item)) {
+            fail("Unexpected item <" + item + "> present in collection <" + StringUtil.join(", ", actual) + ">");
         }
     }
 }

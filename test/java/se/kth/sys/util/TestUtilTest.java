@@ -19,12 +19,27 @@ public class TestUtilTest {
     }
 
     @Test
-    public void testContainsNot() {
+    public void testNotContains() {
         try {
             TestUtil.assertContains(4, asList(1, 2, 3));
             fail("The above should throw an execption");
         } catch (AssertionError err) {
-            assertEquals("The item 4 is missing from collection: 1, 2, 3", err.getMessage());
+            assertEquals("The item <4> is missing from collection <1, 2, 3>", err.getMessage());
+        }
+    }
+
+    @Test
+    public void testContainsNot() {
+        TestUtil.assertContainsNot(4, asList(1, 2, 3));
+    }
+
+    @Test
+    public void testNotContainsNot() {
+        try {
+            TestUtil.assertContainsNot(1, asList(1, 2, 3));
+            fail("The above should throw an execption");
+        } catch (AssertionError err) {
+            assertEquals("Unexpected item <1> present in collection <1, 2, 3>", err.getMessage());
         }
     }
 }
