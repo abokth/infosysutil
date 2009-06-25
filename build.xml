@@ -79,7 +79,7 @@
     	<property name="coveragereport.dir" value="test/reports/coverage"/>
         <property name="junitreport.dir" value="test/reports/junit"/>
         <property name="instrumented.dir" value="test/instrumented"/>
-        <tempfile property="cobertura.data" prefix="cobertura-${ant.project.name}" suffix=".ser" destdir="${java.io.tmpdir}"/>
+        <tempfile property="cobertura.data" prefix="cobertura-${ant.project.name}" suffix=".ser"/>
         
         <echo level="info">Instrumented classdir: ${instrumented.dir}</echo>
         <echo level="info">Cobertura datafile: ${cobertura.data}</echo>
