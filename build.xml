@@ -77,10 +77,12 @@
     <!-- Runs test while checking coverage, and build a html report. -->
     <target name="test-coverage" depends="compile-with-tests">
     	<property name="coveragereport.dir" value="test/reports/coverage"/>
-        <property name="cobertura.data" value="${java.io.tmpdir}/cobertura-${ant.project.name}.ser"/>
         <property name="junitreport.dir" value="test/reports/junit"/>
         <property name="instrumented.dir" value="test/instrumented"/>
+        <tempfile property="cobertura.data" prefix="cobertura-${ant.project.name}" suffix=".ser" destdir="${java.io.tmpdir}"/>
         
+        <echo level="info">Instrumented classdir: ${instrumented.dir}</echo>
+        <echo level="info">Cobertura datafile: ${cobertura.data}</echo>
      	<delete dir="${junitreport.dir}"/>
      	<mkdir dir="${junitreport.dir}"/>
         
