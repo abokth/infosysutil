@@ -138,9 +138,16 @@ public class MultivalueMap<K extends Comparable<K>, V> {
         return map.remove(key);
     }
 
-    public void removeFirst(K key) {
+    /**
+     * Remove the first value associated with a specific key from the map.
+     * @param key the key to remove from.
+     * @return the previous values associated with key, or null if there was no mapping for key.
+     */
+    public V removeFirst(K key) {
         if (containsKey(key)) {
-            get(key).remove(0);
+            return get(key).remove(0);
+        } else {
+            return null;
         }
     }
 

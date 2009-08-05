@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
 import static se.kth.sys.util.TestUtil.assertEqualsSet;
 
 import java.util.Arrays;
@@ -149,6 +150,45 @@ public class MultivalueMapTest {
         assertEquals(0, map.size());
         assertEqualsSet(Collections.<Integer>emptyList(), map.keySet());
         assertEqualsSet(Collections.<String>emptyList(), map.values());
+    }
+
+    @Test
+    public void testRemoveFirst() {
+        MultivalueMap<Integer, String> map = new MultivalueMap<Integer, String>();
+        map.put(1, "one");
+        map.put(1, "two");
+
+        assertEquals("one", map.removeFirst(1));
+
+        assertFalse(map.isEmpty());
+        assertEquals(1, map.size());
+        assertEqualsSet(asList("two"), map.get(1));
+    }
+
+    @Test
+    public void testRemoveFirstAndOnly() {
+        MultivalueMap<Integer, String> map = new MultivalueMap<Integer, String>();
+        map.put(1, "one");
+
+        assertEquals("one", map.removeFirst(1));
+
+        // TODO This leaves the map in a state where it has the key but no values.  Is that really good? /kaj 2009-08-05
+        //assertTrue(map.isEmpty());
+        assertEquals(0, map.size());
+        assertEqualsSet(asList(1), map.keySet());
+        assertEqualsSet(Collections.<String>emptyList(), map.values());
+    }
+
+    @Test
+    public void testRemoveFirstNoneExisting() {
+        MultivalueMap<Integer, String> map = new MultivalueMap<Integer, String>();
+        map.put(1, "one");
+
+        assertNull(map.removeFirst(2));
+
+        assertFalse(map.isEmpty());
+        assertEquals(1, map.size());
+        assertEqualsSet(asList("one"), map.get(1));
     }
 
     @Test
