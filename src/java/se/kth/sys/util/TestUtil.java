@@ -6,6 +6,7 @@ import static org.junit.Assert.fail;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Utility methods for tests.
@@ -34,7 +35,21 @@ public final class TestUtil {
      * @param actual the actual elements
      */
     public static <T> void assertEqualsSet(Collection<T> expected, Collection<T> actual) {
-        assertEquals(new HashSet<T>(expected), new HashSet<T>(actual));
+        if (!new HashSet<T>(expected).equals(new HashSet<T>(actual))) {
+            Set<T> extra = new HashSet<T>();
+            Set<T> missing = new HashSet<T>(expected);
+            for (T item : actual) {
+                if (!expected.contains(item)) {
+                    extra.add(item);
+                } else {
+                    missing.remove(item);
+                }
+            }
+            fail("Expected " + expected.toString() + " but "
+                 + (extra.isEmpty() ? "" : "had extra elements " + extra.toString())
+                 + (!extra.isEmpty() && !missing.isEmpty() ? " and " : "")
+                 + (missing.isEmpty() ? "" : "missed elements " + missing.toString()));
+        }
     }
 
     /**
