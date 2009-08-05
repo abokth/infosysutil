@@ -4,6 +4,8 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import java.util.Collections;
+
 import org.junit.Test;
 
 /**
@@ -40,6 +42,21 @@ public class TestUtilTest {
             fail("The above should throw an execption");
         } catch (AssertionError err) {
             assertEquals("Unexpected item <1> present in collection <1, 2, 3>", err.getMessage());
+        }
+    }
+
+    @Test
+    public void testEmpty() {
+        TestUtil.assertEmpty(Collections.emptyList());
+    }
+
+    @Test
+    public void testEmptyNot() {
+        try {
+            TestUtil.assertEmpty(asList(1, 2, 3));
+            fail("The above should throw an execption");
+        } catch (AssertionError err) {
+            assertEquals("Collection should be empty but contained <1, 2, 3>", err.getMessage());
         }
     }
 }

@@ -117,4 +117,10 @@ public final class TestUtil {
             fail("Unexpected item <" + item + "> present in collection <" + StringUtil.join(", ", actual) + ">");
         }
     }
+
+    public static <T> void assertEmpty(Collection<T> actual) {
+        if (!actual.isEmpty()) {
+            fail("Collection should be empty but contained <" + StringUtil.join(", ", actual) + ">");
+        }
+    }
 }
