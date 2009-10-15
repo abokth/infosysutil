@@ -40,6 +40,20 @@ public class MultivalueMapTest {
         assertEquals(Arrays.asList(new String[]{"gurka", "squash"}), map.asMap().get("nyckel"));
     }
 
+    @Test public void testNullAsKey() {
+        MultivalueMap<String, String> map = new MultivalueMap<String, String>();
+        map.put("mat", "gurka");
+        map.put("mat", "squash");
+        map.put(null, "null");
+        map.put(null, "nil");
+        map.put("form", "klot");
+        map.put("form", "kub");
+
+        assertTrue(map.containsKey(null));
+        assertTrue(map.containsValue("null"));
+        assertEquals(6, map.size());
+    }
+
     @Test
     public void testPutAll() {
         MultivalueMap<String, String> map = new MultivalueMap<String, String>();
