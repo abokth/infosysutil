@@ -3,11 +3,10 @@ package se.kth.sys.util;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static se.kth.sys.util.TestUtil.assertEqualsSet;
 
-import java.util.Arrays;
 import java.util.Collections;
 
 import org.junit.Test;
@@ -29,15 +28,15 @@ public class MultivalueMapTest {
         map.put("nyckel", "gurka");
         map.put("nyckel", "squash");
         map.put("nyckel2", "hej");
-        assertEqualsSet(new String[]{"nyckel", "nyckel2"}, map.keySet());
+        assertEqualsSet(asList("nyckel", "nyckel2"), map.keySet());
         assertTrue(map.containsKey("nyckel"));
         assertFalse(map.containsKey("jordgubbe"));
         assertTrue(map.containsValue("gurka"));
         assertTrue(map.containsValue("squash"));
         assertTrue(map.containsValue("hej"));
         assertFalse(map.containsValue("jordgubbe"));
-        assertEquals(Arrays.asList(new String[]{"gurka", "squash"}), map.get("nyckel"));
-        assertEquals(Arrays.asList(new String[]{"gurka", "squash"}), map.asMap().get("nyckel"));
+        assertEquals(asList("gurka", "squash"), map.get("nyckel"));
+        assertEquals(asList("gurka", "squash"), map.asMap().get("nyckel"));
     }
 
     @Test public void testNullAsKey() {
@@ -60,18 +59,18 @@ public class MultivalueMapTest {
         map.put("nyckel", "gurka");
         map.put("nyckel", "squash");
         map.put("nyckel2", "hej");
-        map.putAll("nyckel2", Arrays.asList("t1", "t2"));
-        map.putAll("nyckel3", Arrays.asList("d1", "d2"));
-        assertEqualsSet(new String[]{"nyckel", "nyckel2", "nyckel3"}, map.keySet());
+        map.putAll("nyckel2", asList("t1", "t2"));
+        map.putAll("nyckel3", asList("d1", "d2"));
+        assertEqualsSet(asList("nyckel", "nyckel2", "nyckel3"), map.keySet());
         assertTrue(map.containsKey("nyckel"));
         assertFalse(map.containsKey("jordgubbe"));
         assertTrue(map.containsValue("gurka"));
         assertTrue(map.containsValue("squash"));
         assertTrue(map.containsValue("hej"));
         assertFalse(map.containsValue("jordgubbe"));
-        assertEquals(Arrays.asList(new String[]{"gurka", "squash"}), map.get("nyckel"));
-        assertEquals(Arrays.asList(new String[]{"hej", "t1", "t2"}), map.get("nyckel2"));
-        assertEquals(Arrays.asList(new String[]{"d1", "d2"}), map.get("nyckel3"));
+        assertEquals(asList("gurka", "squash"), map.get("nyckel"));
+        assertEquals(asList("hej", "t1", "t2"), map.get("nyckel2"));
+        assertEquals(asList("d1", "d2"), map.get("nyckel3"));
     }
 
     @Test
@@ -85,16 +84,16 @@ public class MultivalueMapTest {
         map2.put("nyckel3", "d1");
         map2.put("nyckel3", "d2");
         map.putAll(map2);
-        assertEqualsSet(new String[]{"nyckel", "nyckel2", "nyckel3"}, map.keySet());
+        assertEqualsSet(asList("nyckel", "nyckel2", "nyckel3"), map.keySet());
         assertTrue(map.containsKey("nyckel"));
         assertFalse(map.containsKey("jordgubbe"));
         assertTrue(map.containsValue("gurka"));
         assertTrue(map.containsValue("squash"));
         assertTrue(map.containsValue("hej"));
         assertFalse(map.containsValue("jordgubbe"));
-        assertEquals(Arrays.asList("gurka", "squash"), map.get("nyckel"));
-        assertEquals(Arrays.asList("hej", "t1"), map.get("nyckel2"));
-        assertEquals(Arrays.asList("d1", "d2"), map.get("nyckel3"));
+        assertEquals(asList("gurka", "squash"), map.get("nyckel"));
+        assertEquals(asList("hej", "t1"), map.get("nyckel2"));
+        assertEquals(asList("d1", "d2"), map.get("nyckel3"));
     }
 
     @Test
