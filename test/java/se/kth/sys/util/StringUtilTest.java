@@ -35,6 +35,12 @@ public class StringUtilTest {
         assertEquals("foo, bar", StringUtil.join(", ", Arrays.asList("foo", "bar")));
     }
 
+    /** Test for {@link StringUtil.join}. */
+    @Test
+    public void testJoinArray() {
+        assertEquals("foo, bar", StringUtil.join(", ", new String[]{"foo", "bar"}));
+    }
+
     /**
      * Test for {@link StringUtil.join}.
      * It should be possible to join anything with a toString(), int should propagate to Integer.

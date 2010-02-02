@@ -1,5 +1,7 @@
 package se.kth.sys.util;
 
+import static java.util.Arrays.asList;
+
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -14,14 +16,14 @@ public final class StringUtil {
     /**
      * Join the string representations of a set of objects, separated by any separator.
      * @param separator the separator to use
-     * @param l the objects to join.
+     * @param objects the objects to join.
      * @return the joined string.
      * @param <T> type of objects to join.
      */
-    public static <T> String join(String separator, Iterable<T> l) {
+    public static <T> String join(String separator, Iterable<T> objects) {
         StringBuilder retval = new StringBuilder();
 
-        Iterator<T> i = l.iterator();
+        Iterator<T> i = objects.iterator();
         if (i.hasNext()) {
             retval.append(i.next());
             while (i.hasNext()) {
@@ -31,6 +33,17 @@ public final class StringUtil {
         }
 
         return retval.toString();
+    }
+
+    /**
+     * Join the string representations of a set of objects, separated by any separator.
+     * @param separator the separator to use
+     * @param array the objects to join.
+     * @return the joined string.
+     * @param <T> type of objects to join.
+     */
+    public static <T> String join(String separator, T[] array) {
+        return join(separator, asList(array));
     }
 
     /**
