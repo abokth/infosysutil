@@ -73,4 +73,19 @@ public class StringUtilTest {
         assertFalse(StringUtil.equals("", null));
         assertTrue(StringUtil.equals("", ""));
     }
+    
+    @Test
+    public void testNullIsNoValue() {
+        assertFalse(StringUtil.isValue(null));
+    }
+
+    @Test
+    public void testEmptyStringIsNoValue() {
+        assertFalse(StringUtil.isValue(""));
+    }
+
+    @Test
+    public void testContentIsValue() {
+        assertTrue(StringUtil.isValue("Foo"));
+    }
 }

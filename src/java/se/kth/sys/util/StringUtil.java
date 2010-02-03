@@ -79,4 +79,8 @@ public final class StringUtil {
 
         return (a.equals(b));
     }
+
+    public static boolean isValue(String object) {
+        return (object != null) && (!"".equals(object));
+    }
 }
