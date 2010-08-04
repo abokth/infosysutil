@@ -8,19 +8,12 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.CharBuffer;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
+// testing
+import se.kth.sys.util.io.LineReceiver;
+
 public class ReadLineThreadTest {
-
-	@Before
-	public void setUp() throws Exception {
-	}
-
-	@After
-	public void tearDown() throws Exception {
-	}
 
 	@Test
 	public void testRun() {
