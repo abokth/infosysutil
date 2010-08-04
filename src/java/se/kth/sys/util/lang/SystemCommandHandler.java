@@ -1,9 +1,13 @@
 package se.kth.sys.util.lang;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import se.kth.sys.util.io.LineReceiver;
 import se.kth.sys.util.io.ReadLineThread;
@@ -20,6 +24,8 @@ public class SystemCommandHandler implements LineReceiver {
 	private int exitCode = -1;
 	protected ReadLineThread outlog;
 	protected ReadLineThread errlog;
+	private Map<String, String> env = null;
+	private File dir = null;
 
 	public SystemCommandHandler(LinkedList<String> commandline) {
 		this.commandline = commandline;
@@ -56,12 +62,7 @@ public class SystemCommandHandler implements LineReceiver {
 	 */
 	public void executeAndWait() throws IOException, InterruptedException {
 		Runtime runtime = Runtime.getRuntime();
-	
-		String[] argv = commandline.toArray(new String[] {});
-		if (passwordval != null) {
-			argv[passwordindex] = passwordval;
-		}
-		Process process = runtime.exec(argv);
+		Process process = runtime.exec(getPwCommandLine(), getEnvP(), dir);
 	
 		process.getOutputStream().close();
 
@@ -95,7 +96,7 @@ public class SystemCommandHandler implements LineReceiver {
 	/**
 	 * @return
 	 */
-	protected IOException getStdErrIOException() {
+	public IOException getStdErrIOException() {
 		return errlog.getIOException();
 	}
 
@@ -171,6 +172,42 @@ public class SystemCommandHandler implements LineReceiver {
 				ls += " " + s;
 		}
 		return ls;
+	}
+
+	public void setDirectory(File dir) {
+		this.dir = dir;
+	}
+
+	public Map<String, String> environment() {
+		if (env == null)
+			env = new HashMap<String, String>(System.getenv());
+		return env;
+	}
+
+	/**
+	 * @return
+	 */
+	private String[] getEnvP() {
+		String[] envp = null;
+		if (env != null) {
+			envp = new String[env.size()];
+			int i=0;
+			for (Entry<String, String> entry : env.entrySet()) {
+				envp[i++] = entry.getKey() + "=" + entry.getValue();
+			}
+		}
+		return envp;
+	}
+
+	/**
+	 * @return
+	 */
+	private String[] getPwCommandLine() {
+		String[] argv = commandline.toArray(new String[] {});
+		if (passwordval != null) {
+			argv[passwordindex] = passwordval;
+		}
+		return argv;
 	}
 
 }

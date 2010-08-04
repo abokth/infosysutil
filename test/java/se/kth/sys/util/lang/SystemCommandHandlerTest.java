@@ -2,9 +2,12 @@ package se.kth.sys.util.lang;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.junit.Test;
+
+import se.kth.sys.util.lang.SystemCommandHandler;
 
 public class SystemCommandHandlerTest {
 
@@ -22,7 +25,7 @@ public class SystemCommandHandlerTest {
 		SystemCommandHandler c1 = new SystemCommandHandler(new String[]{"foo", "bar", "baz"});
 		SystemCommandHandler c2 = new SystemCommandHandler(new String[]{"baz"});
 		c2.prepend(new String[]{"foo", "bar"});
-		if (! c1.commandline.equals(c2.commandline))
+		if (! c1.testingGetCmdLineStringList().equals(c2.testingGetCmdLineStringList()))
 			fail("prepend(String[]) did the wrong thing");
 	}
 
@@ -129,6 +132,41 @@ public class SystemCommandHandlerTest {
 		SystemCommandHandler c = new SystemCommandHandler(new String[]{"sed", "-e", "s/\\\\/\\//g;", "somefile"});
 		if (! c.asEscapedString().equals("sed -e s/\\\\\\\\/\\\\//g\\; somefile"))
 			fail("command was escaped the wrong way");
+	}
+	
+	@Test
+	public void testSetDirectory() {
+		SystemCommandHandler c = new SystemCommandHandler(new String[]{"pwd"});
+		c.setDirectory(new File("/tmp"));
+		c.enableStdOutStore();
+		try {
+			c.executeAndWait();
+		} catch (IOException e) {
+			fail("IOException caught: " + e.getMessage());
+		} catch (InterruptedException e) {
+			fail("InterruptedException caught: " + e.getMessage());
+		}
+		if (! c.getStdOutStore().get(0).equals("/tmp"))
+			fail("setDirectory() failed");
+	}
+	
+	@Test
+	public void testEnvironment() {
+		SystemCommandHandler c = new SystemCommandHandler(new String[]{"env"});
+		c.environment().put("FOO", "bar");
+		c.enableStdOutStore();
+		try {
+			c.executeAndWait();
+		} catch (IOException e) {
+			fail("IOException caught: " + e.getMessage());
+		} catch (InterruptedException e) {
+			fail("InterruptedException caught: " + e.getMessage());
+		}
+		for (String line : c.getStdOutStore()) {
+			if (line.equals("FOO=bar"))
+				return;
+		}
+		fail("Setting an environment variable had no effect.");
 	}
 
 }
