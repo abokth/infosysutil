@@ -10,9 +10,6 @@ import java.nio.CharBuffer;
 
 import org.junit.Test;
 
-// testing
-import se.kth.sys.util.io.LineReceiver;
-
 public class ReadLineThreadTest {
 
 	@Test
@@ -20,21 +17,22 @@ public class ReadLineThreadTest {
 		final boolean[] ok = new boolean[]{false};
 		final boolean[] fail = new boolean[]{false};
 		Reader s = new StringReader("hej");
-		LineReceiver foo = new LineReceiver() {
-			@Override
-			public void receiveLine(Object bufferid, String line) {
-				if (bufferid.equals("fooid") && line.equals("hej") && ok[0] == false)
-					ok[0] = true;
-				else
-					fail[0] = true;
-			}
-		};
-		final ReadLineThread r = new ReadLineThread(new BufferedReader(s), "fooid", foo);
-		r.run();
-		if (ok[0] == false)
-			fail("receiveLine() was never called correctly");
-		if (fail[0] == true)
-			fail("receiveLine() was called incorrectly");
+		fail("This test is broken somehow.");
+//		LineReceiver foo = new LineReceiver() {
+//			@Override
+//			public void receiveLine(Object bufferid, String line) {
+//				if (bufferid.equals("fooid") && line.equals("hej") && ok[0] == false)
+//					ok[0] = true;
+//				else
+//					fail[0] = true;
+//			}
+//		};
+//		final ReadLineThread r = new ReadLineThread(new BufferedReader(s), "fooid", foo);
+//		r.run();
+//		if (ok[0] == false)
+//			fail("receiveLine() was never called correctly");
+//		if (fail[0] == true)
+//			fail("receiveLine() was called incorrectly");
 	}
 
 	@Test
@@ -50,15 +48,16 @@ public class ReadLineThreadTest {
 			@Override
 			public int read(CharBuffer target) throws IOException { throw e; }
 		};
-		LineReceiver foo = new LineReceiver() {
-			@Override
-			public void receiveLine(Object bufferid, String line) {
-			}
-		};
-		final ReadLineThread r = new ReadLineThread(new BufferedReader(s), "fooid", foo);
-		r.run();
-		if (e != r.getIOException())
-			fail("The IOException was not caught and saved.");
+		fail("This test is broken somehow.");
+//		LineReceiver foo = new LineReceiver() {
+//			@Override
+//			public void receiveLine(Object bufferid, String line) {
+//			}
+//		};
+//		final ReadLineThread r = new ReadLineThread(new BufferedReader(s), "fooid", foo);
+//		r.run();
+//		if (e != r.getIOException())
+//			fail("The IOException was not caught and saved.");
 	}
 
 }
