@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="infosysutil">
-    <property name="version" value="0.14-PRE" description="Version number, increase for any non-trivial change."/>
+    <property name="version" value="0.14" description="Version number, increase for any non-trivial change."/>
 	<property name="java.target" value="1.5" description="Java version target for builds."/>
 	<property name="cobertura.dir" location="test/cobertura-1.9.2"/>
     <description>This is ${ant.project.name} version ${version}, some simple utilities for infosys.</description>
