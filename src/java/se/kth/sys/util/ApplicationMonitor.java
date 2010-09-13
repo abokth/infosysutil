@@ -35,10 +35,10 @@ import java.util.concurrent.TimeoutException;
  */
 public class ApplicationMonitor {
 
-	/**
-	 * Represents the result of a test, basically a immutable tuple of boolean, string.
-	 */
-	public static final class Status {
+    /**
+     * Represents the result of a test, basically a immutable tuple of boolean, string.
+     */
+    public static final class Status {
         private final boolean isOk;
         private final String message;
 
@@ -60,87 +60,93 @@ public class ApplicationMonitor {
         }
     }
 
-	private ExecutorService executorService = Executors.newCachedThreadPool(); //unbounded
-	private Map<String, Future<Status>> testFutures = new HashMap<String, Future<Status>>();
-	private List<String> checkOrder = new ArrayList<String>();
-	private int maxReportTimeSecs;
-	
-	public ApplicationMonitor() {
-		this(15); // defaults to 15 seconds
-	}	
-	
-	public ApplicationMonitor(int maxReportTimeSecs) {
-		this.maxReportTimeSecs = maxReportTimeSecs;
-	}
-	
-	public void addCheck(String statusName, Callable<Status> callable) {
-		if (testFutures.containsKey(statusName)) {
-			throw new IllegalArgumentException("Implicit redefintion of exiting key '" + 
-					statusName + "' not allowed.");
-			// if this should really be needed, create a seperate explicit remove method
-			// this will catch simple errors
-		}
-		checkOrder.add(statusName);
-		testFutures.put(statusName, executorService.submit(callable));
-	}
+    private ExecutorService executorService = Executors.newCachedThreadPool(); //unbounded
+    private Map<String, Future<Status>> testFutures = new HashMap<String, Future<Status>>();
+    private List<String> checkOrder = new ArrayList<String>();
+    private int maxReportTimeSecs;
 
-	/**
-	 * get
-	 * @return
-	 * @throws IOException
-	 */
-	public String createMonitorReport() throws IOException {
-		
-		// get the results from all tests (with timeouts)
-		StringWriter detailedResults = new StringWriter();
-		int errors = checkAllFutures(detailedResults);
+    public ApplicationMonitor() {
+        this(15); // defaults to 15 seconds
+    }	
 
-		// Output
-		StringWriter totalResult = new StringWriter();
-		totalResult.append("APPLICATION_STATUS: ");
-		if (errors > 0) {
-			String message = "Sub-components are broken. " + errors;
-	        totalResult.append(Status.ERROR(message).toString());
-		} else if (testFutures.size() > 0) {
-			String message = "Every component is working";
-	        totalResult.append(Status.OK(message).toString());
-		} else {
-			String message = "No checks configured";
-	        totalResult.append(Status.ERROR(message).toString());
-		}
-		totalResult.append("\n");
-		totalResult.append(detailedResults.getBuffer());
-		
-		//Cleanup
-		executorService.shutdown();
-		
-		return totalResult.toString();
-	}
+    public ApplicationMonitor(int maxReportTimeSecs) {
+        this.maxReportTimeSecs = maxReportTimeSecs;
+    }
 
-	private int checkAllFutures(Writer sw) throws IOException {
-		final long startTS = System.currentTimeMillis();
-		int errors = 0; 
-		// For each entered check
-		for (String checkName : checkOrder) {
-			// Get the result, with a time out
-			// Note the timeout is per test, so max total time is timeout * nr checks
-        	Status result;
-			try {
-				Future<Status> future = this.testFutures.get(checkName);
-				long timeout = startTS + maxReportTimeSecs*1000L - System.currentTimeMillis();
-				if (timeout < 0) timeout = 0;
-				result = future.get(timeout, TimeUnit.MILLISECONDS);
-			} catch (InterruptedException e) {
-        		result = Status.ERROR("Interupted executing test " + e);
-			} catch (ExecutionException e) {
-        		result = Status.ERROR("Exception executing test " + e);
-			} catch (TimeoutException e) {
-				long elapsed = System.currentTimeMillis() - startTS;
-        		result = Status.ERROR("Timeout executing test after " + elapsed);
-			}
-			// remember total nr errors
+    /**
+     * Add check to be part of the total application status.
+     * @param statusName unique identifier of the check/subcomponent
+     * @param callable the actual check that will get called in another thread
+     */
+    public void addCheck(String statusName, Callable<Status> callable) {
+        if (testFutures.containsKey(statusName)) {
+            throw new IllegalArgumentException("Implicit redefintion of exiting key '" + 
+                    statusName + "' not allowed.");
+            // if this should really be needed, create a seperate explicit remove method
+            // this will catch simple errors
+        }
+        checkOrder.add(statusName);
+        testFutures.put(statusName, executorService.submit(callable));
+    }
+
+    /**
+     * Generate the standard applicaiton status report based on added checks.
+     * Till return within <code>maxReportTimeSecs</code>
+     * @return the monitor report
+     * @throws IOException
+     */
+    public String createMonitorReport() throws IOException {
+
+        // get the results from all tests (with timeouts)
+        StringWriter detailedResults = new StringWriter();
+        int errors = checkAllFutures(detailedResults);
+
+        // Output
+        StringWriter totalResult = new StringWriter();
+        totalResult.append("APPLICATION_STATUS: ");
+        if (errors > 0) {
+            String message = "Sub-components are broken. " + errors;
+            totalResult.append(Status.ERROR(message).toString());
+        } else if (testFutures.size() > 0) {
+            String message = "Every component is working";
+            totalResult.append(Status.OK(message).toString());
+        } else {
+            String message = "No checks configured";
+            totalResult.append(Status.ERROR(message).toString());
+        }
+        totalResult.append("\n");
+        totalResult.append(detailedResults.getBuffer());
+
+        //Cleanup
+        executorService.shutdown();
+
+        return totalResult.toString();
+    }
+
+    private int checkAllFutures(Writer sw) throws IOException {
+        final long startTS = System.currentTimeMillis();
+        int errors = 0; 
+        // For each entered check
+        for (String checkName : checkOrder) {
+            // Get the result, with a time out
+            // Note the timeout is per test, so max total time is timeout * nr checks
+            Status result;
+            try {
+                Future<Status> future = this.testFutures.get(checkName);
+                long timeout = startTS + maxReportTimeSecs*1000L - System.currentTimeMillis();
+                if (timeout < 0) timeout = 0;
+                result = future.get(timeout, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                result = Status.ERROR("Interupted executing test " + e);
+            } catch (ExecutionException e) {
+                result = Status.ERROR("Exception executing test " + e);
+            } catch (TimeoutException e) {
+                long elapsed = System.currentTimeMillis() - startTS;
+                result = Status.ERROR("Timeout executing test after " + elapsed);
+            }
+            // remember total nr errors
             if (!result.isOk) {
-            	errors++;
+                errors++;
             }
             // Format human and script readable output message
             sw.append(checkName);
@@ -148,8 +154,8 @@ public class ApplicationMonitor {
             sw.append(result.toString().replace("\n", "\\n"));
             sw.append("\n");
         }
-		return errors;
-	}
-	
+        return errors;
+    }
+
 
 }
