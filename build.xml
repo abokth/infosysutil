@@ -6,8 +6,8 @@
     <description>This is ${ant.project.name} version ${version}, some simple utilities for infosys.</description>
 
     <!-- jar files that can be needed for building or testing, but should not be included in the dist. -->
-    <fileset id="classpath.junit" dir="../common/external/java/lib">
-        <include name="junit4.jar"/>
+    <fileset id="classpath.junit" dir="test/lib">
+        <include name="junit-4.8.2.jar"/>
     </fileset>
 
     <!-- External task definitions for the coverage test utility cobertura -->
