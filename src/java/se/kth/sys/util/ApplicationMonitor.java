@@ -17,9 +17,9 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * Tool to generate a monitor response for diagnostics.
- * 
+ *
  * This is intended to be used by multiple applications following
- * the convention used by monitoring tools at KTH. The end result 
+ * the convention used by monitoring tools at KTH. The end result
  * is a report like
  * <pre>
  * APPLICATION_STATUS: ERROR Sub-components are broken. 2
@@ -27,16 +27,19 @@ import java.util.concurrent.TimeoutException;
  * LOCAL_DB_CONNECTION: OK The sysdate is 2010-09-10.
  * LADOK_DB_CONNECTION: ERROR Exception in Ladok database test: java.sql.SQLException: Failed to initialize db connection pool to jdbc:mysql://ture.umdc.umu.se/kth?useSSL=true&requireSSL=true for the MimerDataLayer as ita_pelube: java.sql.SQLException: Access denied for user 'ita_pelube'@'pelu-mabop.ite.kth.se' (using password: YES)
  * </pre>
- * This is created by adding a number of checks that return a <code>Status</code>. In the above
- * example there are three checks provided, this is then summarized in to the total
+ * This is created by adding a number of checks that return a
+ * <code>Status</code>. In the above example there are three checks provided,
+ * this is then summarized in to the total
  * application status. Each check is run independently and with a timeout.
- * 
+ *
  * @author peter.lundberg
  */
 public class ApplicationMonitor {
 
+    private static final long  MS_PER_SEC = 1000L;
+
     /**
-     * Represents the result of a test, basically a immutable tuple of boolean, string.
+     * Represents the result of a test, an immutable tuple of boolean & string.
      */
     public static final class Status {
         private final boolean isOk;
@@ -56,13 +59,20 @@ public class ApplicationMonitor {
         }
 
         public String toString() {
-            return (isOk ? "OK" : "ERROR") + " " + message;
+            if (isOk) {
+                return "OK " + message;
+            } else {
+                return "ERROR " + message;
+            }
         }
     }
 
-    private ExecutorService executorService = Executors.newCachedThreadPool(); //unbounded
-    private Map<String, Future<Status>> testFutures = new HashMap<String, Future<Status>>();
-    private List<String> checkOrder = new ArrayList<String>();
+    private ExecutorService executorService =
+                    Executors.newCachedThreadPool(); //unbounded
+    private Map<String, Future<Status>> testFutures =
+                    new HashMap<String, Future<Status>>();
+    private List<String> checkOrder =
+                    new ArrayList<String>();
     private int maxReportTimeSecs;
 
     public ApplicationMonitor() {
@@ -78,12 +88,12 @@ public class ApplicationMonitor {
      * @param statusName unique identifier of the check/subcomponent
      * @param callable the actual check that will get called in another thread
      */
-    public void addCheck(String statusName, Callable<Status> callable) {
+    public final void addCheck(final String statusName,
+                        final Callable<Status> callable) {
         if (testFutures.containsKey(statusName)) {
-            throw new IllegalArgumentException("Implicit redefintion of exiting key '" + 
-                    statusName + "' not allowed.");
-            // if this should really be needed, create a seperate explicit remove method
             // this will catch simple errors
+            throw new IllegalArgumentException("Implicit redefintion of "
+                    + "exiting key '" + statusName + "' not allowed.");
         }
         checkOrder.add(statusName);
         testFutures.put(statusName, executorService.submit(callable));
@@ -93,9 +103,9 @@ public class ApplicationMonitor {
      * Generate the standard applicaiton status report based on added checks.
      * Till return within <code>maxReportTimeSecs</code>
      * @return the monitor report
-     * @throws IOException
+     * @throws IOException in unlikely situation it cannot build the string
      */
-    public String createMonitorReport() throws IOException {
+    public final String createMonitorReport() throws IOException {
 
         // get the results from all tests (with timeouts)
         StringWriter detailedResults = new StringWriter();
@@ -125,16 +135,19 @@ public class ApplicationMonitor {
 
     private int checkAllFutures(Writer sw) throws IOException {
         final long startTS = System.currentTimeMillis();
-        int errors = 0; 
+        int errors = 0;
         // For each entered check
         for (String checkName : checkOrder) {
             // Get the result, with a time out
-            // Note the timeout is per test, so max total time is timeout * nr checks
             Status result;
             try {
                 Future<Status> future = this.testFutures.get(checkName);
-                long timeout = startTS + maxReportTimeSecs*1000L - System.currentTimeMillis();
-                if (timeout < 0) timeout = 0;
+                long timeout = startTS
+                        + (maxReportTimeSecs * MS_PER_SEC)
+                        - System.currentTimeMillis();
+                if (timeout < 0) {
+                    timeout = 0;
+                }
                 result = future.get(timeout, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 result = Status.ERROR("Interupted executing test " + e);
@@ -142,12 +155,15 @@ public class ApplicationMonitor {
                 result = Status.ERROR("Exception executing test " + e);
             } catch (TimeoutException e) {
                 long elapsed = System.currentTimeMillis() - startTS;
-                result = Status.ERROR("Timeout executing test after " + elapsed);
+                result = Status.ERROR("Timeout executing test "
+                        + "after " + elapsed + "ms");
             }
+
             // remember total nr errors
             if (!result.isOk) {
                 errors++;
             }
+
             // Format human and script readable output message
             sw.append(checkName);
             sw.append(": ");
