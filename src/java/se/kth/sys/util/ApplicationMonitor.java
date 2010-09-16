@@ -75,8 +75,12 @@ public class ApplicationMonitor {
                     new ArrayList<String>();
     private int maxReportTimeSecs;
 
+    /**
+     * Create an ApplicationMonitor with a default
+     * <code>maxReportTimeSecs</code> of 15 seconds.
+     */
     public ApplicationMonitor() {
-        this(15); // defaults to 15 seconds
+        this(15);
     }	
 
     public ApplicationMonitor(int maxReportTimeSecs) {
@@ -101,7 +105,7 @@ public class ApplicationMonitor {
 
     /**
      * Generate the standard applicaiton status report based on added checks.
-     * Till return within <code>maxReportTimeSecs</code>
+     * Will return within <code>maxReportTimeSecs</code>
      * @return the monitor report
      * @throws IOException in unlikely situation it cannot build the string
      */
