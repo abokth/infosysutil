@@ -19,7 +19,11 @@
     </path>
     <taskdef classpathref="cobertura.classpath" resource="tasks.properties" />
 
-    <target name="continous-integration" depends="clean, test-coverage, jar"
+    <taskdef resource="checkstyletask.properties">
+        <classpath><pathelement location="test/lib/checkstyle-all-5.1.jar"/></classpath>
+    </taskdef>
+
+    <target name="continous-integration" depends="clean, checkstyle, test-coverage, jar"
             description="Full test and build"/>
 
 	<target name="jar" depends="compile"
@@ -130,5 +134,14 @@
             			  srcdir="${basedir}/src/java" datafile="${cobertura.data}"/>
         <delete dir="${instrumented.dir}"/>
         <delete file="${cobertura.data}"/>
+    </target>
+
+	<target name="checkstyle">
+        <mkdir dir="test/reports"/>
+        <checkstyle config="test/checkstyle5.xml">
+            <fileset dir="src/java" includes="**/*.java"/>
+            <fileset dir="test/java" includes="**/*.java"/>
+            <formatter type="xml" toFile="test/reports/checkstyle_errors.xml"/>
+        </checkstyle>
     </target>
 </project>

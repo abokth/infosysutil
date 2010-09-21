@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<fileset-config file-format-version="1.1.0" simple-config="true">
-    <fileset name="all" enabled="true" check-config-name="Infosys"
-             type="workspace" location="/common/pkg/checkstyle.xml" description="">
-        <file-match-pattern match-pattern="." include-pattern="true"/>
-    </fileset>
+
+<fileset-config file-format-version="1.2.0" simple-config="true">
+  <local-check-config name="infosysutil checkstyle" location="test/checkstyle5.xml" type="project" description="">
+    <additional-data name="protect-config-file" value="false"/>
+  </local-check-config>
+  <fileset name="all" enabled="true" check-config-name="Sun Checks" local="false">
+    <file-match-pattern match-pattern="." include-pattern="true"/>
+  </fileset>
 </fileset-config>
