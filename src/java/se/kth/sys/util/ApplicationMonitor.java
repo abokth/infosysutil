@@ -81,7 +81,7 @@ public class ApplicationMonitor {
      */
     public ApplicationMonitor() {
         this(15);
-    }	
+    }
 
     public ApplicationMonitor(int maxReportTimeSecs) {
         this.maxReportTimeSecs = maxReportTimeSecs;

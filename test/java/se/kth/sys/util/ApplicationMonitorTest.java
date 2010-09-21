@@ -21,8 +21,8 @@ public class ApplicationMonitorTest {
             }
         });
 
-        assertEquals("APPLICATION_STATUS: OK Every component is working\n" +
-                "Hello: OK World\n", monitor.createMonitorReport());
+        assertEquals("APPLICATION_STATUS: OK Every component is working\n"
+                + "Hello: OK World\n", monitor.createMonitorReport());
     }
 
     @Test
@@ -108,4 +108,5 @@ public class ApplicationMonitorTest {
         ApplicationMonitor monitor = new ApplicationMonitor();
         assertEquals("APPLICATION_STATUS: ERROR No checks configured\n",
                 monitor.createMonitorReport());
-    }}
+    }
+}

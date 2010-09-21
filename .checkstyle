@@ -4,7 +4,8 @@
   <local-check-config name="infosysutil checkstyle" location="test/checkstyle5.xml" type="project" description="">
     <additional-data name="protect-config-file" value="false"/>
   </local-check-config>
-  <fileset name="all" enabled="true" check-config-name="Sun Checks" local="false">
+  <fileset name="all" enabled="true" check-config-name="infosysutil checkstyle" local="true">
     <file-match-pattern match-pattern="." include-pattern="true"/>
   </fileset>
+  <filter name="NonSrcDirs" enabled="true"/>
 </fileset-config>
