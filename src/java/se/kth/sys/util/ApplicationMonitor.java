@@ -58,6 +58,10 @@ public class ApplicationMonitor {
             this.message = message;
         }
 
+        public boolean isOk() {
+            return isOk;
+        }
+
         public String toString() {
             if (isOk) {
                 return "OK " + message;
