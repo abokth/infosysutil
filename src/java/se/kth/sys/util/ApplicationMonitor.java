@@ -22,10 +22,9 @@ import java.util.concurrent.TimeoutException;
  * the convention used by monitoring tools at KTH. The end result
  * is a report like
  * <pre>
- * APPLICATION_STATUS: ERROR Sub-components are broken. 2
+ * APPLICATION_STATUS: ERROR Sub-components are broken. 1
  * SCHEMA_BACKEND: ERROR Timeout executing test java.util.concurrent.TimeoutException
  * LOCAL_DB_CONNECTION: OK The sysdate is 2010-09-10.
- * LADOK_DB_CONNECTION: ERROR Exception in Ladok database test: java.sql.SQLException: Failed to initialize db connection pool to jdbc:mysql://ture.umdc.umu.se/kth?useSSL=true&requireSSL=true for the MimerDataLayer as ita_pelube: java.sql.SQLException: Access denied for user 'ita_pelube'@'pelu-mabop.ite.kth.se' (using password: YES)
  * </pre>
  * This is created by adding a number of checks that return a
  * <code>Status</code>. In the above example there are three checks provided,
