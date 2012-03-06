@@ -1,6 +1,5 @@
 package se.kth.sys.util;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
@@ -59,8 +58,7 @@ public final class TestUtil {
      * @param actual the actual elements
      */
     public static <T> void assertEqualsSet(T[] expected, Collection<T> actual) {
-        assertEquals(new HashSet<T>(Arrays.asList(expected)),
-                new HashSet<T>(actual));
+        assertEqualsSet(Arrays.asList(expected), actual);
     }
 
     /**
@@ -74,7 +72,7 @@ public final class TestUtil {
         for (T t : actual) {
             actualSet.add(t);
         }
-        assertEquals(new HashSet<T>(expected), actualSet);
+        assertEqualsSet(expected, actualSet);
     }
 
     /**
@@ -106,7 +104,7 @@ public final class TestUtil {
      */
     @SuppressWarnings("unchecked")
     public static <T> void assertEqualsSet(T expected, Iterable<T> actual) {
-        assertEquals(Arrays.asList(expected), actual);
+        assertEqualsSet(Arrays.asList(expected), actual);
     }
 
     /**
