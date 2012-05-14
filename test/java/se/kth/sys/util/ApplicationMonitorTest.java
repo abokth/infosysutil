@@ -18,7 +18,7 @@ public class ApplicationMonitorTest {
         monitor.addCheck("Hello", new HappyTest());
 
         assertEquals("APPLICATION_STATUS: OK Every component is working\n"
-                + "Hello: OK World\n", monitor.createMonitorReport());
+                + "Hello: OK Happy World\n", monitor.createMonitorReport());
     }
 
     @Test
