@@ -15,11 +15,7 @@ public class ApplicationMonitorTest {
     public void okCheckSummarizesAsOk() throws IOException {
         ApplicationMonitor monitor = new ApplicationMonitor();
 
-        monitor.addCheck("Hello", new Callable<Status>() {
-            public Status call() throws Exception {
-                return fakeTest(Status.OK("World"));
-            }
-        });
+        monitor.addCheck("Hello", new HappyTest());
 
         assertEquals("APPLICATION_STATUS: OK Every component is working\n"
                 + "Hello: OK World\n", monitor.createMonitorReport());
@@ -29,16 +25,8 @@ public class ApplicationMonitorTest {
     public void errorCheckSummarizesAsError() throws IOException {
         ApplicationMonitor monitor = new ApplicationMonitor();
 
-        monitor.addCheck("Hello", new Callable<Status>() {
-            public Status call() throws Exception {
-                return fakeTest(Status.OK("Happy World"));
-            }
-        });
-        monitor.addCheck("Hello2", new Callable<Status>() {
-            public Status call() throws Exception {
-                return fakeTest(Status.ERROR("Cruel World"));
-            }
-        });
+        monitor.addCheck("Hello", new HappyTest());
+        monitor.addCheck("Hello2", new FailingTest());
 
         assertEquals("APPLICATION_STATUS: ERROR Sub-components are broken. 1\n"
                 + "Hello: OK Happy World\n"
@@ -73,10 +61,7 @@ public class ApplicationMonitorTest {
                 Thread.sleep(timeoutMs * 2);
                 return Status.OK("Time out"); }
         });
-        monitor.addCheck("Hello", new Callable<Status>() {
-            public Status call() throws Exception {
-                return Status.OK("Happy World"); }
-        });
+        monitor.addCheck("Hello", new HappyTest());
         String report = monitor.createMonitorReport();
         long elapsed = System.currentTimeMillis() - startTs;
 
@@ -96,26 +81,13 @@ public class ApplicationMonitorTest {
     public void duplicateCheckKeysNotAllowed() throws IOException {
         ApplicationMonitor monitor = new ApplicationMonitor();
 
-        monitor.addCheck("Hello", new Callable<Status>() {
-            public Status call() throws Exception {
-                return fakeTest(Status.OK("Happy World"));
-            }
-        });
+        monitor.addCheck("Hello", new HappyTest());
         try {
-            monitor.addCheck("Hello", new Callable<Status>() {
-                public Status call() throws Exception {
-                    return fakeTest(Status.ERROR("Cruel World"));
-                }
-            });
+            monitor.addCheck("Hello", new HappyTest());
             fail("Duplicate key should not be allowed");
         } catch (IllegalArgumentException e) {
-            assertTrue(e.getMessage(), e.getMessage().contains(
-                            "Implicit redefintion of existing key"));
+            assertEquals("Implicit redefintion of existing key 'Hello' not allowed.", e.getMessage());
         }
-    }
-
-    protected Status fakeTest(Status statusToReturn) {
-        return statusToReturn;
     }
 
     @Test
@@ -123,5 +95,17 @@ public class ApplicationMonitorTest {
         ApplicationMonitor monitor = new ApplicationMonitor();
         assertEquals("APPLICATION_STATUS: ERROR No checks configured\n",
                 monitor.createMonitorReport());
+    }
+
+    private static final class HappyTest implements Callable<Status> {
+        public Status call() throws Exception {
+            return Status.OK("Happy World");
+        }
+    }
+
+    private static final class FailingTest implements Callable<Status> {
+        public Status call() throws Exception {
+            return Status.ERROR("Cruel World");
+        }
     }
 }
