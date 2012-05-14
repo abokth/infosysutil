@@ -1,6 +1,7 @@
 package se.kth.sys.util.lang;
 
 import static org.junit.Assert.*;
+import static se.kth.sys.util.TestUtil.assertContains;
 
 import java.io.File;
 import java.io.IOException;
@@ -91,8 +92,8 @@ public class SystemCommandHandlerTest {
         SystemCommandHandler c = new SystemCommandHandler(new String[]{"false"});
         c.enableStdOutStore();
         c.enableStdErrStore();
-        c.receiveLine(SystemCommandHandler.STDOUT, "out");
-        c.receiveLine(SystemCommandHandler.STDERR, "err");
+        c.receiveLine(SystemCommandHandler.StreamId.STDOUT, "out");
+        c.receiveLine(SystemCommandHandler.StreamId.STDERR, "err");
         if (! c.getStdOutStore().get(0).equals("out"))
             fail("did not catch stdout");
         if (! c.getStdErrStore().get(0).equals("err"))
@@ -130,11 +131,7 @@ public class SystemCommandHandlerTest {
         c.enableStdOutStore();
         c.executeAndWait();
 
-        for (String line : c.getStdOutStore()) {
-            if (line.equals("FOO=bar"))
-                return;
-        }
-        fail("Setting an environment variable had no effect.");
+        assertContains("FOO=bar", c.getStdOutStore());
     }
 
 }

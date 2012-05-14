@@ -19,13 +19,16 @@ public class SystemCommandHandler implements LineReceiver {
     private String passwordval;
     private List<String> stdOutStore = null;
     private List<String> stdErrStore = null;
-    protected static Object STDOUT = new Object();
-    protected static Object STDERR = new Object();
     private int exitCode = -1;
     protected ReadLineThread outlog;
     protected ReadLineThread errlog;
     private Map<String, String> env = null;
     private File dir = null;
+
+    protected enum StreamId {
+        STDOUT,
+        STDERR;
+    }
 
     public SystemCommandHandler(LinkedList<String> commandline) {
         this.commandline = commandline;
@@ -67,8 +70,8 @@ public class SystemCommandHandler implements LineReceiver {
 
         process.getOutputStream().close();
 
-        outlog = new ReadLineThread(process.getInputStream(), STDOUT, this);
-        errlog = new ReadLineThread(process.getErrorStream(), STDERR, this);
+        outlog = new ReadLineThread(process.getInputStream(), StreamId.STDOUT, this);
+        errlog = new ReadLineThread(process.getErrorStream(), StreamId.STDERR, this);
 
         outlog.start();
         errlog.start();
@@ -130,12 +133,12 @@ public class SystemCommandHandler implements LineReceiver {
      * @param s
      */
     protected void storeStdioLine(Object streamid, String s) {
-        if (STDOUT == streamid) {
+        if (StreamId.STDOUT == streamid) {
             if (stdOutStore != null) {
                 stdOutStore.add(s);
             }
         }
-        if (STDERR == streamid) {
+        if (StreamId.STDERR == streamid) {
             if (stdErrStore != null) {
                 stdErrStore.add(s);
             }
