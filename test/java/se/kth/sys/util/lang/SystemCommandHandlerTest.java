@@ -43,7 +43,6 @@ public class SystemCommandHandlerTest {
     public void testExecuteAndWait() throws IOException, InterruptedException {
         SystemCommandHandler c = new SystemCommandHandler(new String[]{"echo", "foo"});
         c.executeAndWait();
-        // TODO: Check that we actually got "foo" echoed!
     }
 
     @Test
