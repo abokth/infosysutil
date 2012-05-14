@@ -55,8 +55,7 @@ public class SystemCommandHandlerTest {
         c.enableStdOutStore();
         c.executeAndWait();
 
-        if (! c.getStdOutStore().get(0).equals("foo gazonk bar"))
-            fail("setPassword() handled wrong");
+        assertEquals("foo gazonk bar", c.getStdOutStore().get(0));
     }
 
     @Test
@@ -64,8 +63,7 @@ public class SystemCommandHandlerTest {
         SystemCommandHandler c = new SystemCommandHandler(new String[]{"echo", "foo"});
         c.executeAndWait();
 
-        if (c.getExitCode() != 0)
-            fail("Executing 'echo foo' did not return exit code 0.");
+        assertEquals(0, c.getExitCode());
     }
 
     @Test
@@ -73,8 +71,7 @@ public class SystemCommandHandlerTest {
       SystemCommandHandler c = new SystemCommandHandler(new String[]{"false"});
       c.executeAndWait();
 
-      if (c.getExitCode() != 1)
-          fail("Executing 'false' did not return exit code 1.");
+      assertEquals(1, c.getExitCode());
     }
 
     /* don't know how to generate these */
@@ -110,8 +107,7 @@ public class SystemCommandHandlerTest {
     @Ignore("Fails to load classes in hudson") @Test
     public void testAsEscapedString() {
         SystemCommandHandler c = new SystemCommandHandler(new String[]{"sed", "-e", "s/\\\\/\\//g;", "somefile"});
-        if (! c.asEscapedString().equals("sed -e s/\\\\\\\\/\\\\//g\\; somefile"))
-            fail("command was escaped the wrong way");
+        assertEquals("sed -e s/\\\\\\\\/\\\\//g\\; somefile", c.asEscapedString());
     }
 
     @Test
@@ -120,8 +116,8 @@ public class SystemCommandHandlerTest {
       c.setDirectory(new File("/tmp"));
       c.enableStdOutStore();
       c.executeAndWait();
-      if (! c.getStdOutStore().get(0).equals("/tmp"))
-          fail("setDirectory() failed");
+
+      assertEquals("/tmp", c.getStdOutStore().get(0));
     }
 
     @Ignore("Fails to load classes in hudson") @Test
