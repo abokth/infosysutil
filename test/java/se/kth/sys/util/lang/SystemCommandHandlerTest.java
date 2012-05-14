@@ -8,8 +8,6 @@ import static org.junit.Assert.*;
 import org.junit.Ignore;
 import org.junit.Test;
 
-//import se.kth.sys.util.lang.SystemCommandHandler;
-
 public class SystemCommandHandlerTest {
 
     @Ignore("Fails to load classes in hudson") @Test
@@ -129,12 +127,11 @@ public class SystemCommandHandlerTest {
         fail("This test is broken somehow.");
     }
 
-    @Ignore("Fails to load classes in hudson") @Test
+    @Test
     public void testToString() {
-//      SystemCommandHandler c = new SystemCommandHandler(new String[]{"cat", "my file"});
-//      if (! c.toString().equals("Command line: cat \"my file\""))
-//      fail("command was escaped the wrong way");
-        fail("This test is broken somehow.");
+        SystemCommandHandler c = new SystemCommandHandler(new String[]{"cat", "my file"});
+        // The output should be quoted just like so:
+        assertEquals("Command line: cat \"my file\"", c.toString());
     }
 
     @Ignore("Fails to load classes in hudson") @Test
