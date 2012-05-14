@@ -111,6 +111,7 @@
 			<formatter type="plain" usefile="no"/>
 			<formatter type="xml"/>
 		    <classpath location="${instrumented.dir}"/>
+		    <classpath location="bin"/><!-- Interfaces are not instrumented, add orig path to find them -->
 		    <classpath location="test/classes"/>
             <classpath>
                 <fileset refid="classpath.junit"/>
