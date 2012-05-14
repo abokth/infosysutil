@@ -67,7 +67,7 @@
 
 	<target name="compile">
 	    <mkdir dir="bin"/>
-		<javac srcdir="src/java" destdir="bin" debug="on" target="${java.target}">
+		<javac srcdir="src/java" destdir="bin" debug="on" target="${java.target}" includeantruntime="no">
 		    <classpath>
 		        <fileset refid="classpath.junit"/>
 		    </classpath>
@@ -76,7 +76,7 @@
 
     <target name="compile-with-tests" depends="compile">
         <mkdir dir="test/classes"/>
-        <javac srcdir="test/java" destdir="test/classes" debug="on" target="${java.target}">
+        <javac srcdir="test/java" destdir="test/classes" debug="on" target="${java.target}" includeantruntime="no">
             <classpath location="bin"/>
             <classpath>
 		        <fileset refid="classpath.junit"/>
