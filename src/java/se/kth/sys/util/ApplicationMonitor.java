@@ -100,7 +100,7 @@ public class ApplicationMonitor {
         if (testFutures.containsKey(statusName)) {
             // this will catch simple errors
             throw new IllegalArgumentException("Implicit redefintion of "
-                    + "exiting key '" + statusName + "' not allowed.");
+                    + "existing key '" + statusName + "' not allowed.");
         }
         checkOrder.add(statusName);
         testFutures.put(statusName, executorService.submit(callable));
@@ -159,7 +159,7 @@ public class ApplicationMonitor {
             } catch (InterruptedException e) {
                 result = Status.ERROR("Interupted executing test " + e);
             } catch (ExecutionException e) {
-                result = Status.ERROR("Exception executing test " + e);
+                result = Status.ERROR("Exception executing test " + e.getCause());
             } catch (TimeoutException e) {
                 long elapsed = System.currentTimeMillis() - startTS;
                 result = Status.ERROR("Timeout executing test "

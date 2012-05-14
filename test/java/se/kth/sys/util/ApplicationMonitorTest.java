@@ -47,6 +47,21 @@ public class ApplicationMonitorTest {
     }
 
     @Test
+    public void exceptionInTestIsError() throws IOException {
+        ApplicationMonitor monitor = new ApplicationMonitor();
+
+        monitor.addCheck("Hello", new Callable<Status>() {
+            public Status call() throws Exception {
+                throw new RuntimeException("Expected failure");
+            }
+        });
+
+        assertEquals("APPLICATION_STATUS: ERROR Sub-components are broken. 1\n"
+                + "Hello: ERROR Exception executing test java.lang.RuntimeException: Expected failure\n",
+                monitor.createMonitorReport());
+    }
+
+    @Test
     public void timeout() throws IOException {
         final int timeoutSec = 1;
         final long timeoutMs = timeoutSec * 1000;
@@ -95,7 +110,7 @@ public class ApplicationMonitorTest {
             fail("Duplicate key should not be allowed");
         } catch (IllegalArgumentException e) {
             assertTrue(e.getMessage(), e.getMessage().contains(
-                            "Implicit redefintion of exiting key"));
+                            "Implicit redefintion of existing key"));
         }
     }
 
