@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="infosysutil" default="continous-integration">
     <property name="version" value="0.17-PRE" description="Version number, increase for any non-trivial change."/>
-	<property name="java.target" value="1.5" description="Java version target for builds."/>
+	<property name="java.target" value="1.7" description="Java version target for builds."/>
 	<property name="cobertura.dir" location="test/cobertura-1.9.2"/>
     <description>This is ${ant.project.name} version ${version}, some simple utilities for infosys.</description>
 
@@ -65,21 +65,21 @@
     	<delete file="${ant.project.name}-${version}.jar"/>
     </target>
 
-	<target name="compile">
-	    <mkdir dir="bin"/>
-		<javac srcdir="src/java" destdir="bin" debug="on" target="${java.target}" includeantruntime="no">
-		    <classpath>
-		        <fileset refid="classpath.junit"/>
-		    </classpath>
-		</javac>
-	</target>
+    <target name="compile">
+        <mkdir dir="bin"/>
+        <javac srcdir="src/java" destdir="bin" debug="on" source="${java.target}" target="${java.target}" includeantruntime="no">
+            <classpath>
+                <fileset refid="classpath.junit"/>
+            </classpath>
+        </javac>
+    </target>
 
     <target name="compile-with-tests" depends="compile">
         <mkdir dir="test/classes"/>
-        <javac srcdir="test/java" destdir="test/classes" debug="on" target="${java.target}" includeantruntime="no">
+        <javac srcdir="test/java" destdir="test/classes" debug="on" source="${java.target}" target="${java.target}" includeantruntime="no">
             <classpath location="bin"/>
             <classpath>
-		        <fileset refid="classpath.junit"/>
+                <fileset refid="classpath.junit"/>
             </classpath>
         </javac>
     </target>
