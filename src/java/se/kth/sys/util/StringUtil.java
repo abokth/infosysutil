@@ -20,10 +20,10 @@ public final class StringUtil {
      * @return the joined string.
      * @param <T> type of objects to join.
      */
-    public static <T> String join(String separator, Iterable<T> objects) {
+    public static String join(String separator, Iterable<?> objects) {
         StringBuilder retval = new StringBuilder();
 
-        Iterator<T> i = objects.iterator();
+        Iterator<?> i = objects.iterator();
         if (i.hasNext()) {
             retval.append(i.next());
             while (i.hasNext()) {
