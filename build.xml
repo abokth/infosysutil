@@ -1,6 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="infosysutil" default="continous-integration">
-    <property name="version" value="0.17-PRE" description="Version number, increase for any non-trivial change."/>
+    <property name="version.baseno" value="1"/><!-- Change version number here only. -->
+
+    <property environment="env"/>
+    <property name="env.BUILD_NUMBER" value="PRE"/><!-- fallback -->
+    <property name="env.GIT_BRANCH" value="unknown"/><!-- fallback -->
+    <loadresource property="branchname">
+        <propertyresource name="env.GIT_BRANCH"/>
+        <filterchain>
+            <tokenfilter>
+                <filetokenizer/>
+                <replacestring from="/" to="-"/>
+                <replacestring from="origin-" to=""/>
+            </tokenfilter>
+        </filterchain>
+    </loadresource>
+    <property name="version" value="${branchname}-${version.baseno}.${env.BUILD_NUMBER}"/>
+
 	<property name="java.target" value="1.7" description="Java version target for builds."/>
 	<property name="cobertura.dir" location="test/cobertura-2.0.3"/>
     <description>This is ${ant.project.name} version ${version}, some simple utilities for infosys.</description>
@@ -32,9 +48,16 @@
 	    <javadoc sourcepath="src/java" destdir="javadoc">
 	        <classpath><fileset refid="classpath.junit"/></classpath>
 	    </javadoc>
-	    <jar destfile="${jarfile}" index="true" basedir="bin">
-	        <zipfileset dir="javadoc" prefix="javadoc"/>
-	    </jar>
+        <jar destfile="${jarfile}">
+            <manifest>
+                <attribute name="Built-By" value="${user.name}"/>
+                <attribute name="Implementation-Vendor" value="KTH"/>
+                <attribute name="Implementation-Title" value="${ant.project.name}"/>
+                <attribute name="Implementation-Version" value="${version}"/>
+            </manifest>
+            <fileset dir="bin"/>
+            <zipfileset dir="javadoc" prefix="javadoc"/>
+        </jar>
 	    <delete dir="javadoc"/>
 	    <echo message="Built ${jarfile}" level="info"/>
 	</target>
