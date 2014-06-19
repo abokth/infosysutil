@@ -125,7 +125,7 @@ public class ApplicationMonitor {
      * @return true if the total status is OK
      * @throws IOException in unlikely situation it cannot build the string
      */
-    private Status createMonitorReport(Writer output) throws IOException {
+    public Status createMonitorReport(Writer output) throws IOException {
         // get the results from all tests (with timeouts)
         StringWriter detailedResults = new StringWriter();
         int errors = checkAllFutures(detailedResults);
