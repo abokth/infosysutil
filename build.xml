@@ -48,9 +48,16 @@
 	    <javadoc sourcepath="src/java" destdir="javadoc">
 	        <classpath><fileset refid="classpath.junit"/></classpath>
 	    </javadoc>
-	    <jar destfile="${jarfile}" index="true" basedir="bin">
-	        <zipfileset dir="javadoc" prefix="javadoc"/>
-	    </jar>
+        <jar destfile="${jarfile}">
+            <manifest>
+                <attribute name="Built-By" value="${user.name}"/>
+                <attribute name="Implementation-Vendor" value="KTH"/>
+                <attribute name="Implementation-Title" value="${ant.project.name}"/>
+                <attribute name="Implementation-Version" value="${version}"/>
+            </manifest>
+            <fileset dir="bin"/>
+            <zipfileset dir="javadoc" prefix="javadoc"/>
+        </jar>
 	    <delete dir="javadoc"/>
 	    <echo message="Built ${jarfile}" level="info"/>
 	</target>
