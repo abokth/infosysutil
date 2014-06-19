@@ -1,4 +1,6 @@
 /.settings/
+/.checkstyle.cache
 /bin/
 /test/classes/
+/test/reports/
 /infosysutil-*.jar

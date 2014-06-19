@@ -1,6 +1,8 @@
 package se.kth.sys.util;
 
-public class ClassUtil {
+public final class ClassUtil {
+
+    private ClassUtil() { }
 
     public static String getClassName() {
         try {
