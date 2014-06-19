@@ -113,32 +113,43 @@ public class ApplicationMonitor {
      * @throws IOException in unlikely situation it cannot build the string
      */
     public final String createMonitorReport() throws IOException {
+        StringWriter totalResult = new StringWriter();
+        createMonitorReport(totalResult);
+        return totalResult.toString();
+    }
 
+    /**
+     * Generate the standard applicaiton status report based on added checks.
+     * Will return within <code>maxReportTimeSecs</code>
+     * @param output a writer to print the report to.
+     * @return true if the total status is OK
+     * @throws IOException in unlikely situation it cannot build the string
+     */
+    private Status createMonitorReport(Writer output) throws IOException {
         // get the results from all tests (with timeouts)
         StringWriter detailedResults = new StringWriter();
         int errors = checkAllFutures(detailedResults);
 
         // Output
-        StringWriter totalResult = new StringWriter();
-        totalResult.append("APPLICATION_STATUS: ");
+        Status result;
         if (errors > 0) {
-            String message = "Sub-components are broken. " + errors;
-            totalResult.append(Status.ERROR(message).toString());
+            result = Status.ERROR("Sub-components are broken. " + errors);
         } else if (testFutures.size() > 0) {
-            String message = "Every component is working";
-            totalResult.append(Status.OK(message).toString());
+            result = Status.OK("Every component is working");
         } else {
-            String message = "No checks configured";
-            totalResult.append(Status.ERROR(message).toString());
+            result = Status.ERROR("No checks configured");
         }
-        totalResult.append("\n");
-        totalResult.append(detailedResults.getBuffer());
+        output.append("APPLICATION_STATUS: ");
+        output.append(result.toString());
+        output.append("\n");
+        output.append(detailedResults.getBuffer());
 
         //Cleanup
         executorService.shutdown();
 
-        return totalResult.toString();
+        return result;
     }
+
 
     private int checkAllFutures(Writer sw) throws IOException {
         final long startTS = System.currentTimeMillis();
