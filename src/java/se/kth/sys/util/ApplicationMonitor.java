@@ -76,17 +76,19 @@ public class ApplicationMonitor {
                     new HashMap<String, Future<Status>>();
     private List<String> checkOrder =
                     new ArrayList<String>();
-    private int maxReportTimeSecs;
+    private final String name;
+    private final int maxReportTimeSecs;
 
     /**
      * Create an ApplicationMonitor with a default
      * <code>maxReportTimeSecs</code> of 15 seconds.
      */
-    public ApplicationMonitor() {
-        this(15);
+    public ApplicationMonitor(String name) {
+        this(name, 15);
     }
 
-    public ApplicationMonitor(int maxReportTimeSecs) {
+    public ApplicationMonitor(String name, int maxReportTimeSecs) {
+        this.name = name;
         this.maxReportTimeSecs = maxReportTimeSecs;
     }
 
@@ -128,14 +130,15 @@ public class ApplicationMonitor {
     public Status createMonitorReport(Writer output) throws IOException {
         // get the results from all tests (with timeouts)
         StringWriter detailedResults = new StringWriter();
-        int errors = checkAllFutures(detailedResults);
+        int n_errors = checkAllFutures(detailedResults);
+        int n_ok = testFutures.size() - n_errors;
 
         // Output
         Status result;
-        if (errors > 0) {
-            result = Status.ERROR("Sub-components are broken. " + errors);
-        } else if (testFutures.size() > 0) {
-            result = Status.OK("Every component is working");
+        if (n_errors > 0) {
+            result = Status.ERROR(name + " tests: " + n_errors + " failed, " + n_ok +  " ok");
+        } else if (n_ok > 0) {
+            result = Status.OK(name + " tests: " + n_ok +  " ok");
         } else {
             result = Status.ERROR("No checks configured");
         }
