@@ -1,5 +1,7 @@
 package se.kth.sys.util;
 
+import static java.lang.Math.max;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -34,8 +36,6 @@ import java.util.concurrent.TimeoutException;
  * @author peter.lundberg
  */
 public class ApplicationMonitor {
-
-    private static final long  MS_PER_SEC = 1000L;
 
     /**
      * Represents the result of a test, an immutable tuple of boolean & string.
@@ -156,6 +156,7 @@ public class ApplicationMonitor {
 
     private int checkAllFutures(Writer sw) throws IOException {
         final long startTS = System.currentTimeMillis();
+        final long deadline = startTS + TimeUnit.SECONDS.toMillis(maxReportTimeSecs);
         int errors = 0;
         // For each entered check
         for (String checkName : checkOrder) {
@@ -163,12 +164,7 @@ public class ApplicationMonitor {
             Status result;
             try {
                 Future<Status> future = this.testFutures.get(checkName);
-                long timeout = startTS
-                        + (maxReportTimeSecs * MS_PER_SEC)
-                        - System.currentTimeMillis();
-                if (timeout < 0) {
-                    timeout = 0;
-                }
+                long timeout = max(deadline - System.currentTimeMillis(), 0);
                 result = future.get(timeout, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 result = Status.ERROR("Interupted executing test " + e);
@@ -176,8 +172,7 @@ public class ApplicationMonitor {
                 result = Status.ERROR("Exception executing test " + e.getCause());
             } catch (TimeoutException e) {
                 long elapsed = System.currentTimeMillis() - startTS;
-                result = Status.ERROR("Timeout executing test "
-                        + "after " + elapsed + "ms");
+                result = Status.ERROR("Timeout executing test after " + elapsed + "ms");
             }
 
             // remember total nr errors
