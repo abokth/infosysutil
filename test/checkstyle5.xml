@@ -88,7 +88,7 @@ Based on the KOPPS checkstyle config, maintained in common
             <property name="severity" value="info"/>
         </module>
         <module name="RightCurly"/>
-        <module name="DoubleCheckedLocking"/>
+        <!--module name="DoubleCheckedLocking"/-->
         <module name="EmptyStatement"/>
         <module name="EqualsHashCode"/>
         <module name="HiddenField">

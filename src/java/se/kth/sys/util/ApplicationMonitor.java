@@ -1,5 +1,7 @@
 package se.kth.sys.util;
 
+import static java.lang.Math.max;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -34,8 +36,6 @@ import java.util.concurrent.TimeoutException;
  * @author peter.lundberg
  */
 public class ApplicationMonitor {
-
-    private static final long  MS_PER_SEC = 1000L;
 
     /**
      * Represents the result of a test, an immutable tuple of boolean & string.
@@ -76,17 +76,19 @@ public class ApplicationMonitor {
                     new HashMap<String, Future<Status>>();
     private List<String> checkOrder =
                     new ArrayList<String>();
-    private int maxReportTimeSecs;
+    private final String name;
+    private final int maxReportTimeSecs;
 
     /**
      * Create an ApplicationMonitor with a default
      * <code>maxReportTimeSecs</code> of 15 seconds.
      */
-    public ApplicationMonitor() {
-        this(15);
+    public ApplicationMonitor(String name) {
+        this(name, 15);
     }
 
-    public ApplicationMonitor(int maxReportTimeSecs) {
+    public ApplicationMonitor(String name, int maxReportTimeSecs) {
+        this.name = name;
         this.maxReportTimeSecs = maxReportTimeSecs;
     }
 
@@ -128,14 +130,15 @@ public class ApplicationMonitor {
     public Status createMonitorReport(Writer output) throws IOException {
         // get the results from all tests (with timeouts)
         StringWriter detailedResults = new StringWriter();
-        int errors = checkAllFutures(detailedResults);
+        int n_errors = checkAllFutures(detailedResults);
+        int n_ok = testFutures.size() - n_errors;
 
         // Output
         Status result;
-        if (errors > 0) {
-            result = Status.ERROR("Sub-components are broken. " + errors);
-        } else if (testFutures.size() > 0) {
-            result = Status.OK("Every component is working");
+        if (n_errors > 0) {
+            result = Status.ERROR(name + " tests: " + n_errors + " failed, " + n_ok +  " ok");
+        } else if (n_ok > 0) {
+            result = Status.OK(name + " tests: " + n_ok +  " ok");
         } else {
             result = Status.ERROR("No checks configured");
         }
@@ -153,6 +156,7 @@ public class ApplicationMonitor {
 
     private int checkAllFutures(Writer sw) throws IOException {
         final long startTS = System.currentTimeMillis();
+        final long deadline = startTS + TimeUnit.SECONDS.toMillis(maxReportTimeSecs);
         int errors = 0;
         // For each entered check
         for (String checkName : checkOrder) {
@@ -160,12 +164,7 @@ public class ApplicationMonitor {
             Status result;
             try {
                 Future<Status> future = this.testFutures.get(checkName);
-                long timeout = startTS
-                        + (maxReportTimeSecs * MS_PER_SEC)
-                        - System.currentTimeMillis();
-                if (timeout < 0) {
-                    timeout = 0;
-                }
+                long timeout = max(deadline - System.currentTimeMillis(), 0);
                 result = future.get(timeout, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 result = Status.ERROR("Interupted executing test " + e);
@@ -173,8 +172,7 @@ public class ApplicationMonitor {
                 result = Status.ERROR("Exception executing test " + e.getCause());
             } catch (TimeoutException e) {
                 long elapsed = System.currentTimeMillis() - startTS;
-                result = Status.ERROR("Timeout executing test "
-                        + "after " + elapsed + "ms");
+                result = Status.ERROR("Timeout executing test after " + elapsed + "ms");
             }
 
             // remember total nr errors

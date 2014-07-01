@@ -91,7 +91,6 @@ public final class TestUtil {
      * @param expected the expected elements
      * @param actual the actual elements
      */
-    @SuppressWarnings("unchecked")
     public static <T> void assertEqualsSet(T expected, Collection<T> actual) {
         assertEqualsSet(Arrays.asList(expected), actual);
     }
@@ -102,7 +101,6 @@ public final class TestUtil {
      * @param expected the expected elements
      * @param actual the actual elements
      */
-    @SuppressWarnings("unchecked")
     public static <T> void assertEqualsSet(T expected, Iterable<T> actual) {
         assertEqualsSet(Arrays.asList(expected), actual);
     }

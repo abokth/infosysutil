@@ -1,6 +1,6 @@
 package se.kth.sys.util.lang;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static se.kth.sys.util.TestUtil.assertContains;
 
 import java.io.File;
@@ -16,8 +16,7 @@ public class SystemCommandHandlerTest {
         SystemCommandHandler c1 = new SystemCommandHandler(new String[]{"foo", "bar"});
         SystemCommandHandler c2 = new SystemCommandHandler(new String[]{"bar"});
         c2.prepend("foo");
-        if (! c1.testingGetCmdLineStringList().equals(c2.testingGetCmdLineStringList()))
-            fail("prepend(String) did the wrong thing");
+        assertEquals(c1.testingGetCmdLineStringList(), c2.testingGetCmdLineStringList());
     }
 
     @Test
@@ -25,8 +24,7 @@ public class SystemCommandHandlerTest {
         SystemCommandHandler c1 = new SystemCommandHandler(new String[]{"foo", "bar", "baz"});
         SystemCommandHandler c2 = new SystemCommandHandler(new String[]{"baz"});
         c2.prepend(new String[]{"foo", "bar"});
-        if (! c1.testingGetCmdLineStringList().equals(c2.testingGetCmdLineStringList()))
-            fail("prepend(String[]) did the wrong thing");
+        assertEquals(c1.testingGetCmdLineStringList(), c2.testingGetCmdLineStringList());
     }
 
     @Test
@@ -35,8 +33,7 @@ public class SystemCommandHandlerTest {
         SystemCommandHandler c2 = new SystemCommandHandler(new String[]{"foo"});
         c2.append("bar");
         c2.append("baz");
-        if (! c1.testingGetCmdLineStringList().equals(c2.testingGetCmdLineStringList()))
-            fail("append() did the wrong thing");
+        assertEquals(c1.testingGetCmdLineStringList(), c2.testingGetCmdLineStringList());
     }
 
     @Test
@@ -90,10 +87,8 @@ public class SystemCommandHandlerTest {
         c.enableStdErrStore();
         c.receiveLine(SystemCommandHandler.StreamId.STDOUT, "out");
         c.receiveLine(SystemCommandHandler.StreamId.STDERR, "err");
-        if (! c.getStdOutStore().get(0).equals("out"))
-            fail("did not catch stdout");
-        if (! c.getStdErrStore().get(0).equals("err"))
-            fail("did not catch stderr");
+        assertEquals("out", c.getStdOutStore().get(0));
+        assertEquals("err", c.getStdErrStore().get(0));
     }
 
     @Test
