@@ -82,6 +82,7 @@ public class ApplicationMonitor {
     /**
      * Create an ApplicationMonitor with a default
      * <code>maxReportTimeSecs</code> of 15 seconds.
+     * @param name name of the test suite
      */
     public ApplicationMonitor(String name) {
         this(name, 15);
