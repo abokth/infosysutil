@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="infosysutil" default="continous-integration">
-    <property name="version.baseno" value="1"/><!-- Change version number here only. -->
+    <property name="version.baseno" value="2"/><!-- Change version number here only. -->
 
     <property environment="env"/>
     <property name="env.BUILD_NUMBER" value="PRE"/><!-- fallback -->
