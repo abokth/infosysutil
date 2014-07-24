@@ -37,6 +37,9 @@ import java.util.concurrent.TimeoutException;
  */
 public class ApplicationMonitor {
 
+    private static final int DEFAULT_TIMEOUT = 15; // s
+    private static final long EXTRA_TIME_TO_DIE = 250; // ms
+
     /**
      * Represents the result of a test, an immutable tuple of boolean & string.
      */
@@ -85,7 +88,7 @@ public class ApplicationMonitor {
      * @param name name of the test suite
      */
     public ApplicationMonitor(String name) {
-        this(name, 15);
+        this(name, DEFAULT_TIMEOUT);
     }
 
     public ApplicationMonitor(String name, int maxReportTimeSecs) {
@@ -157,7 +160,17 @@ public class ApplicationMonitor {
 
     private int checkAllFutures(Writer sw) throws IOException {
         final long startTS = System.currentTimeMillis();
-        final long deadline = startTS + TimeUnit.SECONDS.toMillis(maxReportTimeSecs);
+        final long deadline = startTS + TimeUnit.SECONDS.toMillis(maxReportTimeSecs) + EXTRA_TIME_TO_DIE;
+
+        try {
+            if (!executorService.awaitTermination(maxReportTimeSecs, TimeUnit.SECONDS)) {
+                executorService.shutdownNow();
+            }
+        } catch (InterruptedException e1) {
+            executorService.shutdownNow();
+            Thread.currentThread().interrupt(); // Preserve interrupt status
+        }
+
         int errors = 0;
         // For each entered check
         for (String checkName : checkOrder) {
