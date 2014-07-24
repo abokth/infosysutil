@@ -163,8 +163,9 @@ public class ApplicationMonitor {
         final long deadline = startTS + TimeUnit.SECONDS.toMillis(maxReportTimeSecs) + EXTRA_TIME_TO_DIE;
 
         try {
+            executorService.shutdown(); // Close the queue for new entries
             if (!executorService.awaitTermination(maxReportTimeSecs, TimeUnit.SECONDS)) {
-                executorService.shutdownNow();
+                executorService.shutdownNow(); // Interrupt any remaining jobs
             }
         } catch (InterruptedException e1) {
             executorService.shutdownNow();
@@ -183,10 +184,16 @@ public class ApplicationMonitor {
             } catch (InterruptedException e) {
                 result = Status.ERROR("Interupted executing test " + e);
             } catch (ExecutionException e) {
-                result = Status.ERROR("Exception executing test " + e.getCause());
+                Throwable cause = e.getCause();
+                if (cause instanceof InterruptedException) {
+                    long elapsed = System.currentTimeMillis() - startTS;
+                    result = Status.ERROR("Timeout executing test after %s ms", elapsed);
+                } else {
+                    result = Status.ERROR("Exception executing test " + cause);
+                }
             } catch (TimeoutException e) {
                 long elapsed = System.currentTimeMillis() - startTS;
-                result = Status.ERROR("Timeout after %s ms", elapsed);
+                result = Status.ERROR("Unhandled timeout after %s ms", elapsed);
             }
 
             // remember total nr errors

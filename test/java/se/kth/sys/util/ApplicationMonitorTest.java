@@ -61,7 +61,8 @@ public class ApplicationMonitorTest {
         monitor.addCheck("Take", new Callable<Status>() {
             public Status call() throws Exception {
                 Thread.sleep(timeoutMs * 2);
-                return Status.OK("Time out"); }
+                return Status.OK("Time out");
+            }
         });
         monitor.addCheck("Hello", new HappyTest());
         String report = monitor.createMonitorReport();
