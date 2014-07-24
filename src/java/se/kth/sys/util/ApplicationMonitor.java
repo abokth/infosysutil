@@ -44,12 +44,12 @@ public class ApplicationMonitor {
         private final boolean isOk;
         private final String message;
 
-        public static Status OK(String message) {
-            return new Status(true, message);
+        public static Status OK(String message, Object ... args) {
+            return new Status(true, String.format(message, args));
         }
 
-        public static Status ERROR(String message) {
-            return new Status(false, message);
+        public static Status ERROR(String message, Object ... args) {
+            return new Status(false, String.format(message, args));
         }
 
         private Status(boolean isOk, String message) {
@@ -137,9 +137,9 @@ public class ApplicationMonitor {
         // Output
         Status result;
         if (n_errors > 0) {
-            result = Status.ERROR(name + " tests: " + n_errors + " failed, " + n_ok +  " ok");
+            result = Status.ERROR("%s tests: %d failed, %d ok", name, n_errors, n_ok);
         } else if (n_ok > 0) {
-            result = Status.OK(name + " tests: " + n_ok +  " ok");
+            result = Status.OK("%s tests: %d ok", name, n_ok);
         } else {
             result = Status.ERROR("No checks configured");
         }
@@ -173,7 +173,7 @@ public class ApplicationMonitor {
                 result = Status.ERROR("Exception executing test " + e.getCause());
             } catch (TimeoutException e) {
                 long elapsed = System.currentTimeMillis() - startTS;
-                result = Status.ERROR("Timeout executing test after " + elapsed + "ms");
+                result = Status.ERROR("Timeout after %s ms", elapsed);
             }
 
             // remember total nr errors
