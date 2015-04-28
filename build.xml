@@ -39,15 +39,30 @@
         <classpath><pathelement location="test/lib/checkstyle-all-5.1.jar"/></classpath>
     </taskdef>
 
-    <target name="continous-integration" depends="clean, checkstyle, test-coverage, jar"
+    <target name="continous-integration" depends="clean, checkstyle, docjar, test-coverage, jar"
             description="Full test and build"/>
 
-	<target name="jar" depends="compile"
+    <target name="docjar" description="Build a separate jar file with documentation">
+        <property name="docfile" value="${ant.project.name}-${version}-doc.jar"/>
+        <javadoc sourcepath="src/java" destdir="javadoc">
+            <classpath><fileset refid="classpath.junit"/></classpath>
+        </javadoc>
+        <jar destfile="${docfile}">
+            <manifest>
+                <attribute name="Built-By" value="${user.name}"/>
+                <attribute name="Implementation-Vendor" value="KTH"/>
+                <attribute name="Implementation-Title" value="${ant.project.name}"/>
+                <attribute name="Implementation-Version" value="${version}"/>
+            </manifest>
+            <fileset dir="javadoc"/>
+        </jar>
+        <delete dir="javadoc"/>
+        <echo message="Built ${docfile}" level="info"/>
+    </target>
+
+    <target name="jar" depends="compile"
 	    	description="Build a jar file of this package.">
 	    <property name="jarfile" value="${ant.project.name}-${version}.jar"/>
-	    <javadoc sourcepath="src/java" destdir="javadoc">
-	        <classpath><fileset refid="classpath.junit"/></classpath>
-	    </javadoc>
         <jar destfile="${jarfile}">
             <manifest>
                 <attribute name="Built-By" value="${user.name}"/>
@@ -56,9 +71,7 @@
                 <attribute name="Implementation-Version" value="${version}"/>
             </manifest>
             <fileset dir="bin"/>
-            <zipfileset dir="javadoc" prefix="javadoc"/>
         </jar>
-	    <delete dir="javadoc"/>
 	    <echo message="Built ${jarfile}" level="info"/>
 	</target>
 
