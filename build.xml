@@ -21,6 +21,12 @@
 	<property name="cobertura.dir" location="test/cobertura-2.0.3"/>
     <description>This is ${ant.project.name} version ${version}, some simple utilities for infosys.</description>
 
+    <target name="info">
+        <echo message="Build of ${ant.project.name}-${version}, for java ${java.target}"/>
+        <echo message="On ${java.vendor} ${java.vm.name} ${java.version}"/>
+        <echo message="Using ${ant.version}"/>
+    </target>
+
     <!-- jar files that can be needed for building or testing, but should not be included in the dist. -->
     <fileset id="classpath.junit" dir="test/lib">
         <include name="junit-4.8.2.jar"/>
@@ -39,7 +45,7 @@
         <classpath><pathelement location="test/lib/checkstyle-all-5.1.jar"/></classpath>
     </taskdef>
 
-    <target name="continous-integration" depends="clean, checkstyle, docjar, test-coverage, jar"
+    <target name="continous-integration" depends="info, clean, checkstyle, docjar, test-coverage, jar"
             description="Full test and build"/>
 
     <target name="docjar" description="Build a separate jar file with documentation">
