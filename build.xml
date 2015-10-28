@@ -74,6 +74,7 @@
         <!-- this expects class files to be compiled (by eclipse or similar) to ./bin -->
         <junit printsummary="no" haltonfailure="yes">
             <formatter type="plain" usefile="no"/>
+            <formatter type="xml"/>
             <classpath>
                 <pathelement path="bin"/>
                 <pathelement path="test/classes"/>
