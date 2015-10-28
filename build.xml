@@ -71,6 +71,9 @@
 
     <target name="test" depends="compile-with-tests"
             description="Run all unit tests">
+        <property name="junitreport.dir" value="test/reports/junit"/>
+        <delete dir="${junitreport.dir}"/>
+        <mkdir dir="${junitreport.dir}"/>
         <!-- this expects class files to be compiled (by eclipse or similar) to ./bin -->
         <junit printsummary="no" haltonfailure="yes">
             <formatter type="plain" usefile="no"/>
@@ -80,8 +83,8 @@
                 <pathelement path="test/classes"/>
                 <fileset refid="classpath.junit"/>
             </classpath>
-            
-            <batchtest>
+
+            <batchtest todir="${junitreport.dir}">
                 <fileset dir="test/java">
                     <include name="**/*Test.java"/>
                 </fileset>
