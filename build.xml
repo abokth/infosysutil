@@ -17,8 +17,7 @@
     </loadresource>
     <property name="version" value="${branchname}-${version.baseno}.${env.BUILD_NUMBER}"/>
 
-	<property name="java.target" value="1.7" description="Java version target for builds."/>
-	<property name="cobertura.dir" location="test/cobertura-2.0.3"/>
+    <property name="java.target" value="1.7" description="Java version target for builds."/>
     <description>This is ${ant.project.name} version ${version}, some simple utilities for infosys.</description>
 
     <target name="info">
@@ -32,20 +31,9 @@
         <include name="junit-4.8.2.jar"/>
     </fileset>
 
-    <!-- External task definitions for the coverage test utility cobertura -->
-    <path id="cobertura.classpath">
-      <fileset dir="${cobertura.dir}">
-        <include name="cobertura-2.0.3.jar"/>
-        <include name="lib/**/*.jar"/>
-      </fileset>
-    </path>
-    <taskdef classpathref="cobertura.classpath" resource="tasks.properties" />
+    <taskdef resource="checkstyletask.properties" classpath="test/lib/checkstyle-all-5.1.jar"/>
 
-    <taskdef resource="checkstyletask.properties">
-        <classpath><pathelement location="test/lib/checkstyle-all-5.1.jar"/></classpath>
-    </taskdef>
-
-    <target name="continous-integration" depends="info, clean, checkstyle, docjar, test-coverage, jar"
+    <target name="continous-integration" depends="info, clean, checkstyle, docjar, test, jar"
             description="Full test and build"/>
 
     <target name="docjar" description="Build a separate jar file with documentation">
@@ -126,60 +114,7 @@
         </javac>
     </target>
 
-    <!-- Runs test while checking coverage, and build a html report. -->
-    <target name="test-coverage" depends="compile-with-tests">
-    	<property name="coveragereport.dir" value="test/reports/coverage"/>
-        <property name="junitreport.dir" value="test/reports/junit"/>
-        <property name="instrumented.dir" value="test/instrumented"/>
-        <tempfile property="cobertura.data" prefix="cobertura-${ant.project.name}" suffix=".ser" destdir="${java.io.tmpdir}"/>
-        
-        <echo level="info">Instrumented classdir: ${instrumented.dir}</echo>
-        <echo level="info">Cobertura datafile: ${cobertura.data}</echo>
-     	<delete dir="${junitreport.dir}"/>
-     	<mkdir dir="${junitreport.dir}"/>
-        
-        <delete dir="${instrumented.dir}"/>
-		<cobertura-instrument todir="${instrumented.dir}" datafile="${cobertura.data}">
-            <includeClasses regex=".*" />
-
-            <instrumentationClasspath>
-				<pathelement location="bin"/>
-            </instrumentationClasspath>
-        </cobertura-instrument>
-        
-      	<!-- Almost copy of target unittest.  It would be nice to call it, but we need to use the right dirs -->
-		<junit fork="yes" forkmode="once" printsummary="no" haltonfailure="yes">
-            <sysproperty key="net.sourceforge.cobertura.datafile" file="${cobertura.data}"/>
-			<formatter type="plain" usefile="no"/>
-			<formatter type="xml"/>
-		    <classpath location="${instrumented.dir}"/>
-		    <classpath location="bin"/><!-- Interfaces are not instrumented, add orig path to find them -->
-		    <classpath location="test/classes"/>
-            <classpath>
-                <fileset refid="classpath.junit"/>
-            </classpath>
-			<classpath refid="cobertura.classpath"/>
-			
-			<batchtest todir="${junitreport.dir}">
-				<fileset dir="test/java">
-					<include name="**/*Test.java"/>
-				</fileset>
-			</batchtest>
-		</junit>
-
-      	<delete dir="${coveragereport.dir}"/>
-        <mkdir dir="${coveragereport.dir}"/>
-        <!-- A nice human-readable report. -->
-        <cobertura-report format="html" destdir="${coveragereport.dir}"
-            			  srcdir="${basedir}/src/java" datafile="${cobertura.data}"/>
-        <!-- A nice computer-readable report, used by hudson. -->
-        <cobertura-report format="xml" destdir="${coveragereport.dir}"
-            			  srcdir="${basedir}/src/java" datafile="${cobertura.data}"/>
-        <delete dir="${instrumented.dir}"/>
-        <delete file="${cobertura.data}"/>
-    </target>
-
-	<target name="checkstyle">
+    <target name="checkstyle">
         <mkdir dir="test/reports"/>
         <checkstyle config="test/checkstyle5.xml">
             <fileset dir="src/java" includes="**/*.java"/>
