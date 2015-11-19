@@ -37,6 +37,9 @@ import java.util.concurrent.TimeoutException;
  */
 public class ApplicationMonitor {
 
+    private static final int DEFAULT_TIMEOUT = 15; // s
+    private static final long EXTRA_TIME_TO_DIE = 250; // ms
+
     /**
      * Represents the result of a test, an immutable tuple of boolean & string.
      */
@@ -44,12 +47,12 @@ public class ApplicationMonitor {
         private final boolean isOk;
         private final String message;
 
-        public static Status OK(String message) {
-            return new Status(true, message);
+        public static Status OK(String message, Object ... args) {
+            return new Status(true, String.format(message, args));
         }
 
-        public static Status ERROR(String message) {
-            return new Status(false, message);
+        public static Status ERROR(String message, Object ... args) {
+            return new Status(false, String.format(message, args));
         }
 
         private Status(boolean isOk, String message) {
@@ -82,9 +85,10 @@ public class ApplicationMonitor {
     /**
      * Create an ApplicationMonitor with a default
      * <code>maxReportTimeSecs</code> of 15 seconds.
+     * @param name name of the test suite
      */
     public ApplicationMonitor(String name) {
-        this(name, 15);
+        this(name, DEFAULT_TIMEOUT);
     }
 
     public ApplicationMonitor(String name, int maxReportTimeSecs) {
@@ -136,9 +140,9 @@ public class ApplicationMonitor {
         // Output
         Status result;
         if (n_errors > 0) {
-            result = Status.ERROR(name + " tests: " + n_errors + " failed, " + n_ok +  " ok");
+            result = Status.ERROR("%s tests: %d failed, %d ok", name, n_errors, n_ok);
         } else if (n_ok > 0) {
-            result = Status.OK(name + " tests: " + n_ok +  " ok");
+            result = Status.OK("%s tests: %d ok", name, n_ok);
         } else {
             result = Status.ERROR("No checks configured");
         }
@@ -156,7 +160,18 @@ public class ApplicationMonitor {
 
     private int checkAllFutures(Writer sw) throws IOException {
         final long startTS = System.currentTimeMillis();
-        final long deadline = startTS + TimeUnit.SECONDS.toMillis(maxReportTimeSecs);
+        final long deadline = startTS + TimeUnit.SECONDS.toMillis(maxReportTimeSecs) + EXTRA_TIME_TO_DIE;
+
+        try {
+            executorService.shutdown(); // Close the queue for new entries
+            if (!executorService.awaitTermination(maxReportTimeSecs, TimeUnit.SECONDS)) {
+                executorService.shutdownNow(); // Interrupt any remaining jobs
+            }
+        } catch (InterruptedException e1) {
+            executorService.shutdownNow();
+            Thread.currentThread().interrupt(); // Preserve interrupt status
+        }
+
         int errors = 0;
         // For each entered check
         for (String checkName : checkOrder) {
@@ -169,10 +184,16 @@ public class ApplicationMonitor {
             } catch (InterruptedException e) {
                 result = Status.ERROR("Interupted executing test " + e);
             } catch (ExecutionException e) {
-                result = Status.ERROR("Exception executing test " + e.getCause());
+                Throwable cause = e.getCause();
+                if (cause instanceof InterruptedException) {
+                    long elapsed = System.currentTimeMillis() - startTS;
+                    result = Status.ERROR("Timeout executing test after %s ms", elapsed);
+                } else {
+                    result = Status.ERROR("Exception executing test " + cause);
+                }
             } catch (TimeoutException e) {
                 long elapsed = System.currentTimeMillis() - startTS;
-                result = Status.ERROR("Timeout executing test after " + elapsed + "ms");
+                result = Status.ERROR("Unhandled timeout after %s ms", elapsed);
             }
 
             // remember total nr errors

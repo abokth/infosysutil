@@ -61,7 +61,8 @@ public class ApplicationMonitorTest {
         monitor.addCheck("Take", new Callable<Status>() {
             public Status call() throws Exception {
                 Thread.sleep(timeoutMs * 2);
-                return Status.OK("Time out"); }
+                return Status.OK("Time out");
+            }
         });
         monitor.addCheck("Hello", new HappyTest());
         String report = monitor.createMonitorReport();
@@ -100,13 +101,13 @@ public class ApplicationMonitorTest {
 
     private static final class HappyTest implements Callable<Status> {
         public Status call() throws Exception {
-            return Status.OK("Happy World");
+            return Status.OK("Happy %s", "World");
         }
     }
 
     private static final class FailingTest implements Callable<Status> {
         public Status call() throws Exception {
-            return Status.ERROR("Cruel World");
+            return Status.ERROR("Cruel %s", "World");
         }
     }
 }

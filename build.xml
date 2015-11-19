@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="infosysutil" default="continous-integration">
-    <property name="version.baseno" value="2"/><!-- Change version number here only. -->
+    <property name="version.baseno" value="3"/><!-- Change version number here only. -->
 
     <property environment="env"/>
     <property name="env.BUILD_NUMBER" value="PRE"/><!-- fallback -->
@@ -17,37 +17,46 @@
     </loadresource>
     <property name="version" value="${branchname}-${version.baseno}.${env.BUILD_NUMBER}"/>
 
-	<property name="java.target" value="1.7" description="Java version target for builds."/>
-	<property name="cobertura.dir" location="test/cobertura-2.0.3"/>
+    <property name="java.target" value="1.7" description="Java version target for builds."/>
     <description>This is ${ant.project.name} version ${version}, some simple utilities for infosys.</description>
+
+    <target name="info">
+        <echo message="Build of ${ant.project.name}-${version}, for java ${java.target}"/>
+        <echo message="On ${java.vendor} ${java.vm.name} ${java.version}"/>
+        <echo message="Using ${ant.version}"/>
+    </target>
 
     <!-- jar files that can be needed for building or testing, but should not be included in the dist. -->
     <fileset id="classpath.junit" dir="test/lib">
         <include name="junit-4.8.2.jar"/>
     </fileset>
 
-    <!-- External task definitions for the coverage test utility cobertura -->
-    <path id="cobertura.classpath">
-      <fileset dir="${cobertura.dir}">
-        <include name="cobertura-2.0.3.jar"/>
-        <include name="lib/**/*.jar"/>
-      </fileset>
-    </path>
-    <taskdef classpathref="cobertura.classpath" resource="tasks.properties" />
+    <taskdef resource="checkstyletask.properties" classpath="test/lib/checkstyle-all-5.1.jar"/>
 
-    <taskdef resource="checkstyletask.properties">
-        <classpath><pathelement location="test/lib/checkstyle-all-5.1.jar"/></classpath>
-    </taskdef>
-
-    <target name="continous-integration" depends="clean, checkstyle, test-coverage, jar"
+    <target name="continous-integration" depends="info, clean, checkstyle, docjar, test, jar"
             description="Full test and build"/>
 
-	<target name="jar" depends="compile"
+    <target name="docjar" description="Build a separate jar file with documentation">
+        <property name="docfile" value="${ant.project.name}-${version}-doc.jar"/>
+        <javadoc sourcepath="src/java" destdir="javadoc">
+            <classpath><fileset refid="classpath.junit"/></classpath>
+        </javadoc>
+        <jar destfile="${docfile}">
+            <manifest>
+                <attribute name="Built-By" value="${user.name}"/>
+                <attribute name="Implementation-Vendor" value="KTH"/>
+                <attribute name="Implementation-Title" value="${ant.project.name}"/>
+                <attribute name="Implementation-Version" value="${version}"/>
+            </manifest>
+            <fileset dir="javadoc"/>
+        </jar>
+        <delete dir="javadoc"/>
+        <echo message="Built ${docfile}" level="info"/>
+    </target>
+
+    <target name="jar" depends="compile"
 	    	description="Build a jar file of this package.">
 	    <property name="jarfile" value="${ant.project.name}-${version}.jar"/>
-	    <javadoc sourcepath="src/java" destdir="javadoc">
-	        <classpath><fileset refid="classpath.junit"/></classpath>
-	    </javadoc>
         <jar destfile="${jarfile}">
             <manifest>
                 <attribute name="Built-By" value="${user.name}"/>
@@ -56,24 +65,26 @@
                 <attribute name="Implementation-Version" value="${version}"/>
             </manifest>
             <fileset dir="bin"/>
-            <zipfileset dir="javadoc" prefix="javadoc"/>
         </jar>
-	    <delete dir="javadoc"/>
 	    <echo message="Built ${jarfile}" level="info"/>
 	</target>
 
     <target name="test" depends="compile-with-tests"
             description="Run all unit tests">
+        <property name="junitreport.dir" value="test/reports/junit"/>
+        <delete dir="${junitreport.dir}"/>
+        <mkdir dir="${junitreport.dir}"/>
         <!-- this expects class files to be compiled (by eclipse or similar) to ./bin -->
         <junit printsummary="no" haltonfailure="yes">
             <formatter type="plain" usefile="no"/>
+            <formatter type="xml"/>
             <classpath>
                 <pathelement path="bin"/>
                 <pathelement path="test/classes"/>
                 <fileset refid="classpath.junit"/>
             </classpath>
-            
-            <batchtest>
+
+            <batchtest todir="${junitreport.dir}">
                 <fileset dir="test/java">
                     <include name="**/*Test.java"/>
                 </fileset>
@@ -107,60 +118,7 @@
         </javac>
     </target>
 
-    <!-- Runs test while checking coverage, and build a html report. -->
-    <target name="test-coverage" depends="compile-with-tests">
-    	<property name="coveragereport.dir" value="test/reports/coverage"/>
-        <property name="junitreport.dir" value="test/reports/junit"/>
-        <property name="instrumented.dir" value="test/instrumented"/>
-        <tempfile property="cobertura.data" prefix="cobertura-${ant.project.name}" suffix=".ser" destdir="${java.io.tmpdir}"/>
-        
-        <echo level="info">Instrumented classdir: ${instrumented.dir}</echo>
-        <echo level="info">Cobertura datafile: ${cobertura.data}</echo>
-     	<delete dir="${junitreport.dir}"/>
-     	<mkdir dir="${junitreport.dir}"/>
-        
-        <delete dir="${instrumented.dir}"/>
-		<cobertura-instrument todir="${instrumented.dir}" datafile="${cobertura.data}">
-            <includeClasses regex=".*" />
-
-            <instrumentationClasspath>
-				<pathelement location="bin"/>
-            </instrumentationClasspath>
-        </cobertura-instrument>
-        
-      	<!-- Almost copy of target unittest.  It would be nice to call it, but we need to use the right dirs -->
-		<junit fork="yes" forkmode="once" printsummary="no" haltonfailure="yes">
-            <sysproperty key="net.sourceforge.cobertura.datafile" file="${cobertura.data}"/>
-			<formatter type="plain" usefile="no"/>
-			<formatter type="xml"/>
-		    <classpath location="${instrumented.dir}"/>
-		    <classpath location="bin"/><!-- Interfaces are not instrumented, add orig path to find them -->
-		    <classpath location="test/classes"/>
-            <classpath>
-                <fileset refid="classpath.junit"/>
-            </classpath>
-			<classpath refid="cobertura.classpath"/>
-			
-			<batchtest todir="${junitreport.dir}">
-				<fileset dir="test/java">
-					<include name="**/*Test.java"/>
-				</fileset>
-			</batchtest>
-		</junit>
-
-      	<delete dir="${coveragereport.dir}"/>
-        <mkdir dir="${coveragereport.dir}"/>
-        <!-- A nice human-readable report. -->
-        <cobertura-report format="html" destdir="${coveragereport.dir}"
-            			  srcdir="${basedir}/src/java" datafile="${cobertura.data}"/>
-        <!-- A nice computer-readable report, used by hudson. -->
-        <cobertura-report format="xml" destdir="${coveragereport.dir}"
-            			  srcdir="${basedir}/src/java" datafile="${cobertura.data}"/>
-        <delete dir="${instrumented.dir}"/>
-        <delete file="${cobertura.data}"/>
-    </target>
-
-	<target name="checkstyle">
+    <target name="checkstyle">
         <mkdir dir="test/reports"/>
         <checkstyle config="test/checkstyle5.xml">
             <fileset dir="src/java" includes="**/*.java"/>
