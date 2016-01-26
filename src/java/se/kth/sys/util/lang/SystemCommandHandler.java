@@ -210,7 +210,7 @@ public class SystemCommandHandler implements LineReceiver {
      * @return
      */
     private String[] getPwCommandLine() {
-        String[] argv = commandline.toArray(new String[] {});
+        String[] argv = commandline.toArray(new String[commandline.size()]);
         if (passwordval != null) {
             argv[passwordindex] = passwordval;
         }
