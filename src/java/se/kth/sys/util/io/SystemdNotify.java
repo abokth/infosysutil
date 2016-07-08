@@ -19,7 +19,7 @@ public class SystemdNotify extends AbstractStatusProxy {
 				String usec = System.getenv("WATCHDOG_USEC");
 				if (System.getenv().containsKey("WATCHDOG_PID")) {
 					String pid = System.getenv("WATCHDOG_PID");
-					String mypid = System.getProperty("propagator.pid");
+					String mypid = System.getProperty("watchdog.pid");
 					if (mypid != null && mypid.equals(pid))
 						systemdNotify.watchdogargs = "MAINPID=" + mypid;
 				}
