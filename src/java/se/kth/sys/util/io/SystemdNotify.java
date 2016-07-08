@@ -44,6 +44,7 @@ public class SystemdNotify extends AbstractStatusProxy {
 		socketWriter = new OutputStreamWriter(socketCommand.getOutputStream());
 	}
 
+	@SuppressWarnings("unused")
 	private void stopNotify() {
 		try {
 			if (socketWriter != null)
