@@ -21,7 +21,7 @@ public class SystemdNotify extends AbstractStatusProxy {
 					String pid = System.getenv("WATCHDOG_PID");
 					String mypid = System.getProperty("watchdog.pid");
 					if (mypid != null && mypid.equals(pid))
-						systemdNotify.watchdogargs = "MAINPID=" + mypid;
+						systemdNotify.watchdogargs = "MAINPID=" + mypid + "\n";
 				}
 				systemdNotify.startWatchdogUpdateTimer(new Long(usec) / 1000);
 			}
@@ -60,22 +60,22 @@ public class SystemdNotify extends AbstractStatusProxy {
 
 	@Override
 	protected void notifyStatus(String string) {
-		sendNotify("STATUS=" + string);
+		sendNotify("STATUS=" + string + "\n");
 	}
 
 	@Override
 	protected void notifyReady(String string) {
-		sendNotify("STATUS=" + string + "\nREADY=1");
+		sendNotify("STATUS=" + string + "\nREADY=1\n");
 	}
 
 	@Override
 	protected void notifyReady() {
-		sendNotify("READY=1");
+		sendNotify("READY=1\n");
 	}
 
 	@Override
 	protected void notifyStopping(String string) {
-		sendNotify("STATUS=" + string + "\nSTOPPING=1");
+		sendNotify("STATUS=" + string + "\nSTOPPING=1\n");
 	}
 
 	@Override
@@ -86,7 +86,7 @@ public class SystemdNotify extends AbstractStatusProxy {
 
 	private void sendNotify(String notification) {
 		if (watchdogargs != null)
-			writeAndFlush(notification + "\n" + watchdogargs);
+			writeAndFlush(notification + watchdogargs);
 		else
 			writeAndFlush(notification);
 	}
