@@ -8,6 +8,8 @@ public class StatusProxy {
 		if (singletonStatusProxy == null)
 			singletonStatusProxy = SystemdNotify.createInstance();
 		if (singletonStatusProxy == null)
+			singletonStatusProxy = StatusFile.createInstance();
+		if (singletonStatusProxy == null)
 			singletonStatusProxy = new StatusProxy();
 		return singletonStatusProxy;
 	}
