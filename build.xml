@@ -27,9 +27,10 @@
     </target>
 
     <!-- jar files that can be needed for building or testing, but should not be included in the dist. -->
-    <fileset id="classpath.junit" dir="test/lib">
-        <include name="junit-4.8.2.jar"/>
-    </fileset>
+    <path id="classpath.junit">
+        <pathelement location="test/lib/junit-4.8.2.jar" />
+        <pathelement location="test/lib/ant-junit4.jar" />
+    </path>
 
     <taskdef resource="checkstyletask.properties" classpath="test/lib/checkstyle-all-5.1.jar"/>
 
@@ -39,7 +40,7 @@
     <target name="docjar" description="Build a separate jar file with documentation">
         <property name="docfile" value="${ant.project.name}-${version}-doc.jar"/>
         <javadoc sourcepath="src/java" destdir="javadoc">
-            <classpath><fileset refid="classpath.junit"/></classpath>
+            <classpath><path refid="classpath.junit"/></classpath>
         </javadoc>
         <jar destfile="${docfile}">
             <manifest>
@@ -81,7 +82,7 @@
             <classpath>
                 <pathelement path="bin"/>
                 <pathelement path="test/classes"/>
-                <fileset refid="classpath.junit"/>
+                <path refid="classpath.junit"/>
             </classpath>
 
             <batchtest todir="${junitreport.dir}">
@@ -103,7 +104,7 @@
         <mkdir dir="bin"/>
         <javac srcdir="src/java" destdir="bin" debug="on" source="${java.target}" target="${java.target}" includeantruntime="no">
             <classpath>
-                <fileset refid="classpath.junit"/>
+                <path refid="classpath.junit"/>
             </classpath>
         </javac>
     </target>
@@ -113,7 +114,7 @@
         <javac srcdir="test/java" destdir="test/classes" debug="on" source="${java.target}" target="${java.target}" includeantruntime="no">
             <classpath location="bin"/>
             <classpath>
-                <fileset refid="classpath.junit"/>
+                <path refid="classpath.junit"/>
             </classpath>
         </javac>
     </target>
