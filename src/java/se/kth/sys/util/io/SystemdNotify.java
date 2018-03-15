@@ -2,6 +2,7 @@ package se.kth.sys.util.io;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import se.kth.sys.util.lang.SystemCommandHandler;
 
@@ -9,6 +10,7 @@ public class SystemdNotify extends AbstractStatusProxy {
 	private SystemCommandHandler socketCommand = null;
 	String watchdogargs = null;
 	private OutputStreamWriter socketWriter = null;
+	private ConcurrentLinkedQueue<String> queue = null;
 
 	protected static SystemdNotify createInstance() {
 		if (System.getenv().containsKey("NOTIFY_SOCKET")) {
@@ -43,6 +45,7 @@ public class SystemdNotify extends AbstractStatusProxy {
 		socketCommand = new SystemCommandHandler(new String[] { "socat", "-u", "-", "GOPEN:" + socket });
 		socketCommand.execute();
 		socketWriter = new OutputStreamWriter(socketCommand.getOutputStream());
+		queue = new ConcurrentLinkedQueue<String>();
 	}
 
 	@SuppressWarnings("unused")
@@ -82,24 +85,42 @@ public class SystemdNotify extends AbstractStatusProxy {
 	@Override
 	protected void notifyWatchdog() {
 		if (watchdogargs != null)
-			writeAndFlush(watchdogargs);
+			writeIfStarted(watchdogargs);
 	}
 
 	private void sendNotify(String notification) {
 		if (watchdogargs != null)
-			writeAndFlush(notification + watchdogargs);
+			writeIfStarted(notification + watchdogargs);
 		else
-			writeAndFlush(notification);
+			writeIfStarted(notification);
 	}
 
-	private void writeAndFlush(String string) {
+	private void writeIfStarted(String string) {
 		if (socketCommand == null || socketWriter == null)
 			return;
-		try {
-			socketWriter.write(string);
-			socketWriter.flush();
-			socketCommand.getOutputStream().flush();
-		} catch (IOException e) {}
+		queue.add(string);
+		
+		// Run in a separate thread since it will block for at least a second.
+		new Thread() {
+			public void run() {
+				writeAndFlush();
+			}
+		}.start();
+	}
+
+	synchronized private void writeAndFlush() {
+		while (!queue.isEmpty()) {
+			String string = queue.remove();
+			try {
+				socketWriter.write(string);
+				socketWriter.flush();
+				socketCommand.getOutputStream().flush();
+			} catch (IOException e) {}
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+			}
+		}
 	}
 
 }
