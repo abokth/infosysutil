@@ -6,6 +6,18 @@ import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
+/**
+ * A simple implementation of StatusProxy which writes the current status to
+ * the file provided by the STATUS_FILE environment variable, in the form
+ * 
+ * (STARTING|READY|STOPPING) <counter> <status text>
+ * 
+ * The reader of the file should consider a change in the content of the file as
+ * an update of the watchdog timestamp.
+ * 
+ * @author abo
+ *
+ */
 public class StatusFile extends StatusProxy {
 	private static final String STARTING = "STARTING", READY = "READY", STOPPING = "STOPPING";
 	private String serviceState = null, statusText = null;
@@ -59,6 +71,14 @@ public class StatusFile extends StatusProxy {
 		watchdogExpirerTimer.cancel();
 	}
 
+	/**
+	 * Enable watchdog updates on status updates.
+	 * 
+	 * The service must provide status updates at least every watchdog_msec milliseconds
+	 * by calling any of the setStarting(), setRunning() or setStopping() methods every so often.
+	 * 
+	 * @param watchdog_msec Maximum amount of time between each watchdog update.
+	 */
 	protected void startWatchdogUpdateTimer(final long watchdog_msec) {
 		need_watchdog_update = true;
 		watchdogExpirerTimer = new Timer();
@@ -70,6 +90,12 @@ public class StatusFile extends StatusProxy {
 		}, 0, watchdog_msec / 3);
 	}
 
+	/**
+	 * Initializes and returns an instance of StatusFile if the matching
+	 * environment variables are found, else returns null.
+	 * 
+	 * @return an instance of StatusFile or null
+	 */
 	protected static StatusFile createInstance() {
 		if (System.getenv().containsKey("STATUS_FILE")) {
 			String statusfilename = System.getenv("STATUS_FILE");
@@ -92,6 +118,12 @@ public class StatusFile extends StatusProxy {
 		return null;
 	}
 
+	/**
+	 * Write the given string to the status file.
+	 * 
+	 * @param string
+	 * @throws IOException
+	 */
 	private void writeStatusString(String string) throws IOException {
 		FileWriter writer = new FileWriter(statusFile, false);
 		try {
@@ -101,6 +133,10 @@ public class StatusFile extends StatusProxy {
 		}
 	}
 
+	/**
+	 * Generate the content of the status file and write it.
+	 * Accordingly resets the watchdog update flag.
+	 */
 	private void writeStatus() {
 		String statusstring = serviceState + " " + Integer.toString(counter++) + " " + statusText;
 		if (counter >= 1048576)
@@ -116,11 +152,20 @@ public class StatusFile extends StatusProxy {
 		writeStatus();
 	}
 
+	/**
+	 * Call writeStatus() if a watchdog update is needed.
+	 */
 	private void writeOldStatus() {
 		if (need_watchdog_update)
 			writeStatus();
 	}
 
+	/**
+	 * Call writeStatus() if a watchdog update is needed or the status
+	 * text has changed.
+	 * 
+	 * @param s Describes the current status
+	 */
 	private void writeOldStatus(String s) {
 		if (need_watchdog_update || statusText == null || !statusText.equals(s))
 			writeStatus(s);
