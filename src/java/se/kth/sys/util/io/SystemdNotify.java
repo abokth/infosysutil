@@ -6,6 +6,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import se.kth.sys.util.lang.SystemCommandHandler;
 
+/**
+ * The sd_notify compatible implementation of StatusProxy.
+ * 
+ * @author abo
+ *
+ */
 public class SystemdNotify extends AbstractStatusProxy {
 	private SystemCommandHandler socketCommand = null;
 	String watchdogargs = null;
@@ -13,6 +19,12 @@ public class SystemdNotify extends AbstractStatusProxy {
 	private ConcurrentLinkedQueue<String> statusQueue = null, stateQueue = null;
 	boolean started = false;
 
+	/**
+	 * Initializes and returns an instance of SystemdNotify if the matching
+	 * environment variables are found, else returns null.
+	 * 
+	 * @return an instance of SystemdNotify or null
+	 */
 	protected static SystemdNotify createInstance() {
 		if (System.getenv().containsKey("NOTIFY_SOCKET")) {
 			String socket = System.getenv("NOTIFY_SOCKET");
@@ -41,6 +53,13 @@ public class SystemdNotify extends AbstractStatusProxy {
 		return null;
 	}
 
+	/**
+	 * Opens a named socket. This is implemented by starting a new process and
+	 * executing the socat command.
+	 * 
+	 * @param socket a path to a named socket
+	 * @throws IOException
+	 */
 	private void startNotify(String socket) throws IOException {
 		// How to talk to a unix socket in Java.
 		socketCommand = new SystemCommandHandler(new String[] { "socat", "-u", "-", "GOPEN:" + socket });
@@ -51,6 +70,9 @@ public class SystemdNotify extends AbstractStatusProxy {
 		started = true;
 	}
 
+	/**
+	 * Drain queues and disconnect from the socket.
+	 */
 	@SuppressWarnings("unused")
 	private void stopNotify() {
 		writeAndFlush();
@@ -111,6 +133,10 @@ public class SystemdNotify extends AbstractStatusProxy {
 			startQueueFlush();
 	}
 
+	/**
+	 * Due to rate limiting writing to the socket may take a while.
+	 * This runs it in a separate thread to enable notify*() to return quickly.
+	 */
 	private void startQueueFlush() {
 		// Run in a separate thread since it will block for at least a second.
 		new Thread() {
@@ -120,6 +146,10 @@ public class SystemdNotify extends AbstractStatusProxy {
 		}.start();
 	}
 
+	/**
+	 * Write the latest queued state and status to the socket, then inhibit
+	 * sending for one second. 
+	 */
 	synchronized private void writeAndFlush() {
 		// Find the last status text and the last state code given.
 		String lastStatus = null, lastState = null;
