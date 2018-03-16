@@ -169,7 +169,7 @@ public class SystemdNotify extends StatusProxy {
 	 * Due to rate limiting writing to the socket may take a while.
 	 * This runs it in a separate thread to enable notify*() to return quickly.
 	 */
-	private void startQueueFlushIfRequired() {
+	private void startNotifyAndFlushIfRequired() {
 		if (!initialized)
 			return;
 		if (need_watchdog_update || needNewNotification()) {
@@ -185,27 +185,27 @@ public class SystemdNotify extends StatusProxy {
 	@Override
 	public void setStarting(String string) {
 		statusText = string;
-		startQueueFlushIfRequired();
+		startNotifyAndFlushIfRequired();
 	}
 
 	@Override
 	public void setRunning() {
 		sendReady = true;
-		startQueueFlushIfRequired();
+		startNotifyAndFlushIfRequired();
 	}
 
 	@Override
 	public void setRunning(String string) {
 		sendReady = true;
 		statusText = string;
-		startQueueFlushIfRequired();
+		startNotifyAndFlushIfRequired();
 	}
 
 	@Override
 	public void setStopping(String string) {
 		sendStopping = true;
 		statusText = string;
-		startQueueFlushIfRequired();
+		startNotifyAndFlushIfRequired();
 	}
 
 	@Override
