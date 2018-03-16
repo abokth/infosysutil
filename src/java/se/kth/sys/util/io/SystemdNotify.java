@@ -10,7 +10,8 @@ public class SystemdNotify extends AbstractStatusProxy {
 	private SystemCommandHandler socketCommand = null;
 	String watchdogargs = null;
 	private OutputStreamWriter socketWriter = null;
-	private ConcurrentLinkedQueue<String> queue = null;
+	private ConcurrentLinkedQueue<String> statusQueue = null, stateQueue = null;
+	boolean started = false;
 
 	protected static SystemdNotify createInstance() {
 		if (System.getenv().containsKey("NOTIFY_SOCKET")) {
@@ -32,7 +33,7 @@ public class SystemdNotify extends AbstractStatusProxy {
 			try {
 				systemdNotify.startNotify(socket);
 			} catch (IOException e) {
-				// TODO Automatiskt genererat catch-block
+				// TODO Automatically generated catch block
 				e.printStackTrace();
 			}
 			return systemdNotify;
@@ -45,11 +46,15 @@ public class SystemdNotify extends AbstractStatusProxy {
 		socketCommand = new SystemCommandHandler(new String[] { "socat", "-u", "-", "GOPEN:" + socket });
 		socketCommand.execute();
 		socketWriter = new OutputStreamWriter(socketCommand.getOutputStream());
-		queue = new ConcurrentLinkedQueue<String>();
+		statusQueue = new ConcurrentLinkedQueue<String>();
+		stateQueue = new ConcurrentLinkedQueue<String>();
+		started = true;
 	}
 
 	@SuppressWarnings("unused")
 	private void stopNotify() {
+		writeAndFlush();
+		started = false;
 		try {
 			if (socketWriter != null)
 				socketWriter.close();
@@ -60,46 +65,53 @@ public class SystemdNotify extends AbstractStatusProxy {
 		} catch (InterruptedException e) {
 		} catch (IOException e) {
 		}
+		stateQueue = null;
+		statusQueue = null;
+		socketWriter = null;
+		socketCommand = null;
 	}
 
 	@Override
 	protected void notifyStatus(String string) {
-		sendNotify("STATUS=" + string + "\n");
+		if (started) {
+			statusQueue.add("STATUS=" + string + "\n");
+			startQueueFlush();
+		}
 	}
 
 	@Override
 	protected void notifyReady(String string) {
-		sendNotify("STATUS=" + string + "\nREADY=1\n");
+		if (started) {
+			statusQueue.add("STATUS=" + string + "\n");
+			stateQueue.add("READY=1\n");
+			startQueueFlush();
+		}
 	}
 
 	@Override
 	protected void notifyReady() {
-		sendNotify("READY=1\n");
+		if (started) {
+			stateQueue.add("READY=1\n");
+			startQueueFlush();
+		}
 	}
 
 	@Override
 	protected void notifyStopping(String string) {
-		sendNotify("STATUS=" + string + "\nSTOPPING=1\n");
+		if (started) {
+			statusQueue.add("STATUS=" + string + "\n");
+			stateQueue.add("STOPPING=1\n");
+			startQueueFlush();
+		}
 	}
 
 	@Override
 	protected void notifyWatchdog() {
-		if (watchdogargs != null)
-			writeIfStarted(watchdogargs);
+		if (started && watchdogargs != null)
+			startQueueFlush();
 	}
 
-	private void sendNotify(String notification) {
-		if (watchdogargs != null)
-			writeIfStarted(notification + watchdogargs);
-		else
-			writeIfStarted(notification);
-	}
-
-	private void writeIfStarted(String string) {
-		if (socketCommand == null || socketWriter == null)
-			return;
-		queue.add(string);
-		
+	private void startQueueFlush() {
 		// Run in a separate thread since it will block for at least a second.
 		new Thread() {
 			public void run() {
@@ -109,17 +121,29 @@ public class SystemdNotify extends AbstractStatusProxy {
 	}
 
 	synchronized private void writeAndFlush() {
-		while (!queue.isEmpty()) {
-			String string = queue.remove();
+		// Find the last status text and the last state code given.
+		String lastStatus = null, lastState = null;
+		while (!statusQueue.isEmpty()) {
+			lastStatus = statusQueue.remove();
+		}
+		while (!stateQueue.isEmpty()) {
+			lastState = stateQueue.remove();
+		}
+
+		// Send a single message with the given information and a watchdog notification (if enabled).
+		if (lastStatus != null || lastState != null || watchdogargs != null) {
+			String string = (lastStatus != null ? lastStatus : "") + (lastState != null ? lastState : "") + (watchdogargs != null ? watchdogargs : "");
 			try {
 				socketWriter.write(string);
 				socketWriter.flush();
 				socketCommand.getOutputStream().flush();
 			} catch (IOException e) {}
+
+			// Stay inside this (synchronized) method for one second, if we sent something.
+			// (There's rate limiting at the receiving end of these messages.)
 			try {
 				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-			}
+			} catch (InterruptedException e) {}
 		}
 	}
 
