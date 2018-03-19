@@ -63,20 +63,49 @@ public class SystemdNotify extends WatchdogStatusProxy {
 	}
 
 	/**
+	 * @return
+	 */
+	private boolean dequeueRunningStateNotification() {
+		if (sentReady != sendReady) {
+			sentReady = true;
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * @return
+	 */
+	private boolean dequeueStoppingStateNotification() {
+		if (sentStopping != sendStopping) {
+			sendReady = true; sentReady = true; // or it's too late anyway
+			sentStopping = true;
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * @return
+	 */
+	private boolean dequeueStatusNotification() {
+		if (statusText != null && (sentStatusText == null || !statusText.equals(sentStatusText))) {
+			sentStatusText = statusText;
+			return true;
+		}
+		return false;
+	}
+
+	/**
 	 * Generates a notification string if the state (ready or stopping) has changed.
 	 * 
 	 * @return a String in sd_notify format or null
 	 */
 	private String dequeueState() {
-		if (sentStopping != sendStopping) {
-			sendReady = true; sentReady = true; // or it's too late anyway
-			sentStopping = true;
+		if (dequeueStoppingStateNotification())
 			return "STOPPING=1\n";
-		}
-		if (sentReady != sendReady) {
-			sentReady = true;
+		if (dequeueRunningStateNotification())
 			return "READY=1\n";
-		}
 		return null;
 	}
 
@@ -86,10 +115,8 @@ public class SystemdNotify extends WatchdogStatusProxy {
 	 * @return a String in sd_notify format or null
 	 */
 	private String dequeueStatus() {
-		if (statusText != null && (sentStatusText == null || !statusText.equals(sentStatusText))) {
-			sentStatusText = statusText;
+		if (dequeueStatusNotification())
 			return "STATUS=" + sentStatusText + "\n";
-		}
 		return null;
 	}
 
