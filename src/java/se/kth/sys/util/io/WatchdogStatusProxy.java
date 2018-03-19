@@ -3,6 +3,10 @@ package se.kth.sys.util.io;
 import java.util.Timer;
 import java.util.TimerTask;
 
+/**
+ * @author Alexander Boström &lt;abo@kth.se&gt;
+ *
+ */
 public class WatchdogStatusProxy extends StatusProxy {
 
 	private boolean need_watchdog_update = false;

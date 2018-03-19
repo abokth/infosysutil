@@ -13,7 +13,7 @@ import java.io.IOException;
  * The reader of the file should consider a change in the content of the file as
  * an update of the watchdog timestamp.
  * 
- * @author abo
+ * @author Alexander Boström &lt;abo@kth.se&gt;
  *
  */
 public class StatusFile extends WatchdogStatusProxy {
