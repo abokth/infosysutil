@@ -1,9 +1,8 @@
 package se.kth.sys.util.io;
 
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 
-import se.kth.sys.util.lang.SystemCommandHandler;
+import se.kth.sys.util.RateLimitTimer;
 
 /**
  * The sd_notify compatible implementation of StatusProxy.
@@ -15,10 +14,14 @@ public class SystemdNotify extends WatchdogStatusProxy {
 	boolean sendReady = false, sentReady = false;
 	boolean sendStopping = false, sentStopping = false;
 	String statusText = null, sentStatusText = null;
+	
+	Thread senderThread;
+	private boolean closed = false;
 
-	private SystemCommandHandler socketCommand = null;
+	private UnixSocket socket;
+	private RateLimitTimer rateLimitTimer;
+
 	String watchdogargs = null;
-	private OutputStreamWriter socketWriter = null;
 
 	/**
 	 * @return true if there are updates needed to be sent, otherwise false
@@ -62,6 +65,29 @@ public class SystemdNotify extends WatchdogStatusProxy {
 	}
 
 	/**
+	 * @param socketfile
+	 * @throws IOException
+	 */
+	private void connect(String socketfile) throws IOException {
+		socket = new UnixSocket();
+		socket.connect(socketfile);
+	}
+
+	/**
+	 * @param s
+	 */
+	private void send(String s) {
+		socket.send(s);
+	}
+
+	/**
+	 * 
+	 */
+	private void disconnect() {
+		socket.close();
+	}
+
+	/**
 	 * Initializes and returns an instance of SystemdNotify if the matching
 	 * environment variables are found, else returns null.
 	 * 
@@ -85,12 +111,14 @@ public class SystemdNotify extends WatchdogStatusProxy {
 			}
 
 			try {
-				systemdNotify.startNotify(socket);
+				systemdNotify.connect(socket);
 			} catch (IOException e) {
 				// TODO Automatically generated catch block
 				e.printStackTrace();
 				return null;
 			}
+			systemdNotify.rateLimitTimer = new RateLimitTimer(1000);
+			systemdNotify.startSenderThread();
 			return systemdNotify;
 		}
 		return null;
@@ -137,62 +165,71 @@ public class SystemdNotify extends WatchdogStatusProxy {
 	}
 
 	/**
-	 * Open socket and initialize variables.
-	 * 
-	 * @param socket a path to a named socket
-	 * @throws IOException
+	 * @return
 	 */
-	private void startNotify(String socket) throws IOException {
-		// How to talk to a unix socket in Java.
-		socketCommand = new SystemCommandHandler(new String[] { "socat", "-u", "-", "GOPEN:" + socket });
-		socketCommand.execute();
-		socketWriter = new OutputStreamWriter(socketCommand.getOutputStream());
-	}
-
-	/**
-	 * Drain queues and disconnect from the socket.
-	 */
-	private void stopNotify() {
-		dequeueAndSendNotification();
-		try {
-			if (socketWriter != null)
-				socketWriter.close();
-			if (socketCommand != null) {
-				socketCommand.getOutputStream().close();
-				socketCommand.joinProcess();
-			}
-		} catch (InterruptedException e) {
-		} catch (IOException e) {
-		}
-		socketWriter = null;
-		socketCommand = null;
-	}
-
-	/**
-	 * Write the latest queued state and status to the socket, then inhibit
-	 * sending for one second. 
-	 * 
-	 * When this returns, sendReady == sentReady and sendStopping == sentStopping
-	 * and statusText equals sentStatusText.
-	 */
-	private void dequeueAndSendNotification() {
-		synchronized (socketWriter) {
+	private String waitForNotification() {
+		while (true) {
 			String toSend = dequeueNotification();
+			if (toSend != null || closed)
+				return toSend;
 
-			if (toSend != null) {
-				try {
-					socketWriter.write(toSend);
-					socketWriter.flush();
-					socketCommand.getOutputStream().flush();
-				} catch (IOException e) {}
-
-				// Stay inside this (synchronized) block for one second, if we sent something.
-				// (There's rate limiting at the receiving end of these messages.)
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {}
-			}
+			// Nothing to do, sleep until interrupted.
+			try {
+				Thread.sleep(1000000000);
+			} catch (InterruptedException e) {}
 		}
+	}
+
+	/**
+	 * 
+	 */
+	private void sendNotificationsWhileOpen() {
+		while (true) {
+			// Ensure that at least one second has passed since the last notification.
+			rateLimitTimer.waitFor();
+
+			// Will return null if endNotifications() was called.
+			String notificationString = waitForNotification();
+			if (notificationString == null)
+				break;
+
+			// Register that we're sending a notification.
+			rateLimitTimer.register();
+
+			// Actually send the string to the socket.
+			send(notificationString);
+		}
+	}
+
+	/**
+	 * 
+	 */
+	private void startSenderThread() {
+		senderThread = new Thread() {
+			@Override
+			public void run() {
+				try {
+					sendNotificationsWhileOpen();
+				} catch (Exception e) {
+					// The watchdog will receive no more notifications after this.
+					e.printStackTrace();
+					closed = true;
+				}
+
+				disconnect();
+			}
+		};
+	}
+
+	/**
+	 * @param timeout
+	 */
+	private void stopSenderThread(long timeout) {
+		closed = true;
+		senderThread.notifyAll();
+		try {
+			senderThread.join(timeout);
+		} catch (InterruptedException e) {}
 	}
 
 	/**
@@ -202,12 +239,16 @@ public class SystemdNotify extends WatchdogStatusProxy {
 	 */
 	private void queueNotification() {
 		if (dequeueWatchdogUpdate() || hasQueuedNotifications()) {
-			new Thread() {
-				public void run() {
-					dequeueAndSendNotification();
-				}
-			}.start();
+			senderThread.notifyAll();
 		}
+	}
+
+	/**
+	 * 
+	 */
+	private void endNotifications() {
+		stopWatchdogUpdateTimer();
+		stopSenderThread(rateLimitTimer.getLimit() * 2);
 	}
 
 	@Override
@@ -239,8 +280,7 @@ public class SystemdNotify extends WatchdogStatusProxy {
 	@Override
 	public void setStopped(String string) {
 		setStopping(string);
-		stopWatchdogUpdateTimer();
-		stopNotify();
+		endNotifications();
 	}
 
 }
