@@ -58,22 +58,22 @@ public class SystemdNotify extends WatchdogStatusProxy {
 	/**
 	 * @return true if there are updates needed to be sent, otherwise false
 	 */
-	private boolean needNewNotification() {
-		return sentReady != sendReady || sentStopping != sendStopping || sentStatusText == null || !sentStatusText.equals(statusText);
+	private boolean hasQueuedNotifications() {
+		return sentReady != sendReady || sentStopping != sendStopping || (statusText != null && (sentStatusText == null || !statusText.equals(sentStatusText)));
 	}
 
 	/**
 	 * Generates a notification string if the state (ready or stopping) has changed.
 	 * 
-	 * @return a String in sd_notify format
+	 * @return a String in sd_notify format or null
 	 */
-	private String getChangedState() {
-		if (sendStopping != sentStopping) {
+	private String dequeueState() {
+		if (sentStopping != sendStopping) {
 			sendReady = true; sentReady = true; // or it's too late anyway
 			sentStopping = true;
 			return "STOPPING=1\n";
 		}
-		if (sendReady != sentReady) {
+		if (sentReady != sendReady) {
 			sentReady = true;
 			return "READY=1\n";
 		}
@@ -83,13 +83,29 @@ public class SystemdNotify extends WatchdogStatusProxy {
 	/**
 	 * Generates a notification string if the status text has changed.
 	 * 
-	 * @return a String in sd_notify format
+	 * @return a String in sd_notify format or null
 	 */
-	private String getChangedStatusText() {
+	private String dequeueStatus() {
 		if (statusText != null && (sentStatusText == null || !statusText.equals(sentStatusText))) {
 			sentStatusText = statusText;
 			return "STATUS=" + sentStatusText + "\n";
 		}
+		return null;
+	}
+
+	/**
+	 * Generates a notification string if any state has changed or if watchdogargs is set.
+	 * 
+	 * @return a String in sd_notify format or null
+	 */
+	private String dequeueNotification() {
+		String newStatus = dequeueStatus();
+		String newState = dequeueState();
+
+		// Send a single message with the given information and a watchdog notification (if enabled).
+		if (newStatus != null || newState != null || watchdogargs != null)
+			return (newStatus != null ? newStatus : "") + (newState != null ? newState : "") + (watchdogargs != null ? watchdogargs : "");
+
 		return null;
 	}
 
@@ -110,9 +126,8 @@ public class SystemdNotify extends WatchdogStatusProxy {
 	/**
 	 * Drain queues and disconnect from the socket.
 	 */
-	@SuppressWarnings("unused")
 	private void stopNotify() {
-		notifyAndFlush();
+		dequeueAndSendNotification();
 		initialized = false;
 		try {
 			if (socketWriter != null)
@@ -135,16 +150,13 @@ public class SystemdNotify extends WatchdogStatusProxy {
 	 * When this returns, sendReady == sentReady and sendStopping == sentStopping
 	 * and statusText equals sentStatusText.
 	 */
-	private void notifyAndFlush() {
+	private void dequeueAndSendNotification() {
 		synchronized (socketWriter) {
-			String newStatus = getChangedStatusText();
-			String newState = getChangedState();
+			String toSend = dequeueNotification();
 
-			// Send a single message with the given information and a watchdog notification (if enabled).
-			if (newStatus != null || newState != null || watchdogargs != null) {
-				String string = (newStatus != null ? newStatus : "") + (newState != null ? newState : "") + (watchdogargs != null ? watchdogargs : "");
+			if (toSend != null) {
 				try {
-					socketWriter.write(string);
+					socketWriter.write(toSend);
 					socketWriter.flush();
 					socketCommand.getOutputStream().flush();
 				} catch (IOException e) {}
@@ -161,16 +173,15 @@ public class SystemdNotify extends WatchdogStatusProxy {
 	/**
 	 * Generate a notification if there are updates needed to be sent.
 	 * 
-	 * Due to rate limiting writing to the socket may take a while.
-	 * This runs it in a separate thread to enable notify*() to return quickly.
+	 * This method must return quickly.
 	 */
-	private void startNotifyAndFlushIfRequired() {
+	private void queueNotification() {
 		if (!initialized)
 			return;
-		if (dequeueWatchdogUpdate() || needNewNotification()) {
+		if (dequeueWatchdogUpdate() || hasQueuedNotifications()) {
 			new Thread() {
 				public void run() {
-					notifyAndFlush();
+					dequeueAndSendNotification();
 				}
 			}.start();
 		}
@@ -179,27 +190,27 @@ public class SystemdNotify extends WatchdogStatusProxy {
 	@Override
 	public void setStarting(String string) {
 		statusText = string;
-		startNotifyAndFlushIfRequired();
+		queueNotification();
 	}
 
 	@Override
 	public void setRunning() {
 		sendReady = true;
-		startNotifyAndFlushIfRequired();
+		queueNotification();
 	}
 
 	@Override
 	public void setRunning(String string) {
 		sendReady = true;
 		statusText = string;
-		startNotifyAndFlushIfRequired();
+		queueNotification();
 	}
 
 	@Override
 	public void setStopping(String string) {
 		sendStopping = true;
 		statusText = string;
-		startNotifyAndFlushIfRequired();
+		queueNotification();
 	}
 
 	@Override
