@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import se.kth.sys.util.WatchdogTimer;
+
 /**
  * A simple implementation of StatusProxy which writes the current status to
  * the file provided by the STATUS_FILE environment variable, in the form
@@ -16,10 +18,12 @@ import java.io.IOException;
  * @author Alexander Boström &lt;abo@kth.se&gt;
  *
  */
-public class StatusFile extends WatchdogStatusProxy {
+public class StatusFile extends StatusProxy {
 	private static final String STARTING = "STARTING", READY = "READY", STOPPING = "STOPPING";
 	private String serviceState = null, statusText = null;
 	private int counter = 0;
+
+	private WatchdogTimer watchdogTimer;
 
 	private File statusFile = null;
 
@@ -63,7 +67,7 @@ public class StatusFile extends WatchdogStatusProxy {
 	public void setStopped(String text) {
 		serviceState = STOPPING;
 		writeStatus(text);
-		stopWatchdogUpdateTimer();
+		watchdogTimer.stop();
 	}
 
 	/**
@@ -79,7 +83,7 @@ public class StatusFile extends WatchdogStatusProxy {
 
 			if (System.getenv().containsKey("WATCHDOG_SEC")) {
 				String sec = System.getenv("WATCHDOG_SEC");
-				instance.startWatchdogUpdateTimer(new Long(sec) * 1000);
+				instance.watchdogTimer = new WatchdogTimer(new Long(sec) * 1000);
 			}
 
 			instance.statusFile = new File(statusfilename);
@@ -131,7 +135,7 @@ public class StatusFile extends WatchdogStatusProxy {
 	 * Call writeStatus() if a watchdog update is needed.
 	 */
 	private void writeOldStatus() {
-		if (dequeueWatchdogUpdate())
+		if (watchdogTimer.dequeueUpdate())
 			writeStatus();
 	}
 
@@ -142,7 +146,7 @@ public class StatusFile extends WatchdogStatusProxy {
 	 * @param s Describes the current status
 	 */
 	private void writeOldStatus(String s) {
-		if (dequeueWatchdogUpdate() || statusText == null || !statusText.equals(s))
+		if (watchdogTimer.dequeueUpdate() || statusText == null || !statusText.equals(s))
 			writeStatus(s);
 	}
 

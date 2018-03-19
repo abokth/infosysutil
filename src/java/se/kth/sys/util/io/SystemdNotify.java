@@ -3,6 +3,7 @@ package se.kth.sys.util.io;
 import java.io.IOException;
 
 import se.kth.sys.util.RateLimitTimer;
+import se.kth.sys.util.WatchdogTimer;
 
 /**
  * The sd_notify compatible implementation of StatusProxy.
@@ -10,11 +11,13 @@ import se.kth.sys.util.RateLimitTimer;
  * @author Alexander Boström &lt;abo@kth.se&gt;
  *
  */
-public class SystemdNotify extends WatchdogStatusProxy {
+public class SystemdNotify extends StatusProxy {
 	boolean sendReady = false, sentReady = false;
 	boolean sendStopping = false, sentStopping = false;
 	String statusText = null, sentStatusText = null;
-	
+
+	private WatchdogTimer watchdogTimer;
+
 	Thread senderThread;
 	private boolean closed = false;
 
@@ -107,7 +110,7 @@ public class SystemdNotify extends WatchdogStatusProxy {
 					if (mypid != null && mypid.equals(pid))
 						systemdNotify.watchdogargs = "MAINPID=" + mypid + "\n" + systemdNotify.watchdogargs;
 				}
-				systemdNotify.startWatchdogUpdateTimer(new Long(usec) / 1000);
+				systemdNotify.watchdogTimer = new WatchdogTimer(new Long(usec) / 1000);
 			}
 
 			try {
@@ -238,7 +241,7 @@ public class SystemdNotify extends WatchdogStatusProxy {
 	 * This method must return quickly.
 	 */
 	private void queueNotification() {
-		if (dequeueWatchdogUpdate() || hasQueuedNotifications()) {
+		if (watchdogTimer.dequeueUpdate() || hasQueuedNotifications()) {
 			senderThread.notifyAll();
 		}
 	}
@@ -247,7 +250,7 @@ public class SystemdNotify extends WatchdogStatusProxy {
 	 * 
 	 */
 	private void endNotifications() {
-		stopWatchdogUpdateTimer();
+		watchdogTimer.stop();
 		stopSenderThread(rateLimitTimer.getLimit() * 2);
 	}
 
