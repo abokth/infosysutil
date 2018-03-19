@@ -15,7 +15,6 @@ public class SystemdNotify extends WatchdogStatusProxy {
 	private SystemCommandHandler socketCommand = null;
 	String watchdogargs = null;
 	private OutputStreamWriter socketWriter = null;
-	boolean initialized = false;
 
 	boolean sendReady = false, sentReady = false;
 	boolean sendStopping = false, sentStopping = false;
@@ -49,6 +48,7 @@ public class SystemdNotify extends WatchdogStatusProxy {
 			} catch (IOException e) {
 				// TODO Automatically generated catch block
 				e.printStackTrace();
+				return null;
 			}
 			return systemdNotify;
 		}
@@ -147,7 +147,6 @@ public class SystemdNotify extends WatchdogStatusProxy {
 		socketCommand = new SystemCommandHandler(new String[] { "socat", "-u", "-", "GOPEN:" + socket });
 		socketCommand.execute();
 		socketWriter = new OutputStreamWriter(socketCommand.getOutputStream());
-		initialized = true;
 	}
 
 	/**
@@ -155,7 +154,6 @@ public class SystemdNotify extends WatchdogStatusProxy {
 	 */
 	private void stopNotify() {
 		dequeueAndSendNotification();
-		initialized = false;
 		try {
 			if (socketWriter != null)
 				socketWriter.close();
@@ -203,8 +201,6 @@ public class SystemdNotify extends WatchdogStatusProxy {
 	 * This method must return quickly.
 	 */
 	private void queueNotification() {
-		if (!initialized)
-			return;
 		if (dequeueWatchdogUpdate() || hasQueuedNotifications()) {
 			new Thread() {
 				public void run() {
