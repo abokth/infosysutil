@@ -7,7 +7,7 @@ import java.util.TimerTask;
  * @author Alexander Boström &lt;abo@kth.se&gt;
  *
  */
-public class WatchdogStatusProxy extends StatusProxy {
+public abstract class WatchdogStatusProxy extends StatusProxy {
 
 	private boolean need_watchdog_update = false;
 	private Timer watchdogExpirerTimer = null;
