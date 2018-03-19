@@ -8,7 +8,7 @@ import se.kth.sys.util.lang.SystemCommandHandler;
 /**
  * The sd_notify compatible implementation of StatusProxy.
  * 
- * @author abo
+ * @author Alexander Boström &lt;abo@kth.se&gt;
  *
  */
 public class SystemdNotify extends WatchdogStatusProxy {

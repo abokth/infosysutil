@@ -18,7 +18,7 @@ package se.kth.sys.util.io;
  * followed by setRunning(s) or setRunning() periodically,
  * until setStopping(s) and setStopped(s) are called.
  * 
- * @author abo
+ * @author Alexander Boström &lt;abo@kth.se&gt;
  *
  */
 public class StatusProxy {
