@@ -12,48 +12,13 @@ import se.kth.sys.util.lang.SystemCommandHandler;
  *
  */
 public class SystemdNotify extends WatchdogStatusProxy {
-	private SystemCommandHandler socketCommand = null;
-	String watchdogargs = null;
-	private OutputStreamWriter socketWriter = null;
-
 	boolean sendReady = false, sentReady = false;
 	boolean sendStopping = false, sentStopping = false;
 	String statusText = null, sentStatusText = null;
 
-	/**
-	 * Initializes and returns an instance of SystemdNotify if the matching
-	 * environment variables are found, else returns null.
-	 * 
-	 * @return an instance of SystemdNotify or null
-	 */
-	protected static SystemdNotify createInstance() {
-		if (System.getenv().containsKey("NOTIFY_SOCKET")) {
-			String socket = System.getenv("NOTIFY_SOCKET");
-			final SystemdNotify systemdNotify = new SystemdNotify();
-
-			if (System.getenv().containsKey("WATCHDOG_USEC")) {
-				String usec = System.getenv("WATCHDOG_USEC");
-				systemdNotify.watchdogargs = "WATCHDOG=1\n";
-				if (System.getenv().containsKey("WATCHDOG_PID")) {
-					String pid = System.getenv("WATCHDOG_PID");
-					String mypid = System.getProperty("watchdog.pid");
-					if (mypid != null && mypid.equals(pid))
-						systemdNotify.watchdogargs = "MAINPID=" + mypid + "\n" + systemdNotify.watchdogargs;
-				}
-				systemdNotify.startWatchdogUpdateTimer(new Long(usec) / 1000);
-			}
-
-			try {
-				systemdNotify.startNotify(socket);
-			} catch (IOException e) {
-				// TODO Automatically generated catch block
-				e.printStackTrace();
-				return null;
-			}
-			return systemdNotify;
-		}
-		return null;
-	}
+	private SystemCommandHandler socketCommand = null;
+	String watchdogargs = null;
+	private OutputStreamWriter socketWriter = null;
 
 	/**
 	 * @return true if there are updates needed to be sent, otherwise false
@@ -94,6 +59,41 @@ public class SystemdNotify extends WatchdogStatusProxy {
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * Initializes and returns an instance of SystemdNotify if the matching
+	 * environment variables are found, else returns null.
+	 * 
+	 * @return an instance of SystemdNotify or null
+	 */
+	protected static SystemdNotify createInstance() {
+		if (System.getenv().containsKey("NOTIFY_SOCKET")) {
+			String socket = System.getenv("NOTIFY_SOCKET");
+			final SystemdNotify systemdNotify = new SystemdNotify();
+
+			if (System.getenv().containsKey("WATCHDOG_USEC")) {
+				String usec = System.getenv("WATCHDOG_USEC");
+				systemdNotify.watchdogargs = "WATCHDOG=1\n";
+				if (System.getenv().containsKey("WATCHDOG_PID")) {
+					String pid = System.getenv("WATCHDOG_PID");
+					String mypid = System.getProperty("watchdog.pid");
+					if (mypid != null && mypid.equals(pid))
+						systemdNotify.watchdogargs = "MAINPID=" + mypid + "\n" + systemdNotify.watchdogargs;
+				}
+				systemdNotify.startWatchdogUpdateTimer(new Long(usec) / 1000);
+			}
+
+			try {
+				systemdNotify.startNotify(socket);
+			} catch (IOException e) {
+				// TODO Automatically generated catch block
+				e.printStackTrace();
+				return null;
+			}
+			return systemdNotify;
+		}
+		return null;
 	}
 
 	/**
