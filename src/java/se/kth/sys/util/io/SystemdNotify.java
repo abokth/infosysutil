@@ -2,8 +2,6 @@ package se.kth.sys.util.io;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import se.kth.sys.util.lang.SystemCommandHandler;
 
@@ -13,7 +11,7 @@ import se.kth.sys.util.lang.SystemCommandHandler;
  * @author abo
  *
  */
-public class SystemdNotify extends StatusProxy {
+public class SystemdNotify extends WatchdogStatusProxy {
 	private SystemCommandHandler socketCommand = null;
 	String watchdogargs = null;
 	private OutputStreamWriter socketWriter = null;
@@ -22,9 +20,6 @@ public class SystemdNotify extends StatusProxy {
 	boolean sendReady = false, sentReady = false;
 	boolean sendStopping = false, sentStopping = false;
 	String statusText = null, sentStatusText = null;
-
-	private boolean need_watchdog_update = false;
-	private Timer watchdogExpirerTimer = null;
 
 	/**
 	 * Initializes and returns an instance of SystemdNotify if the matching
@@ -172,8 +167,7 @@ public class SystemdNotify extends StatusProxy {
 	private void startNotifyAndFlushIfRequired() {
 		if (!initialized)
 			return;
-		if (need_watchdog_update || needNewNotification()) {
-			need_watchdog_update = false;
+		if (dequeueWatchdogUpdate() || needNewNotification()) {
 			new Thread() {
 				public void run() {
 					notifyAndFlush();
@@ -211,31 +205,8 @@ public class SystemdNotify extends StatusProxy {
 	@Override
 	public void setStopped(String string) {
 		setStopping(string);
-		watchdogExpirerTimer.cancel();
+		stopWatchdogUpdateTimer();
 		stopNotify();
-	}
-
-	/**
-	 * Enable watchdog updates on status updates.
-	 * 
-	 * The service must provide status updates at least every watchdog_msec milliseconds
-	 * by calling any of the setStarting(), setRunning() or setStopping() methods every so often.
-	 * 
-	 * Not every status update will result in a watchdog update.
-	 * Only when state, status text or a third of the time specified by
-	 * the parameter has passed will a message be sent to the watchdog.
-	 * 
-	 * @param watchdog_msec Maximum amount of time between each watchdog update.
-	 */
-	protected void startWatchdogUpdateTimer(final long watchdog_msec) {
-		need_watchdog_update = true;
-		watchdogExpirerTimer = new Timer();
-		watchdogExpirerTimer.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				need_watchdog_update = true;
-			}
-		}, 0, watchdog_msec / 3);
 	}
 
 }
