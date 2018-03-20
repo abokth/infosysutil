@@ -139,14 +139,16 @@ public class SystemdNotify extends StatusProxy {
 	 */
 	private String waitForNotification() {
 		while (true) {
-			String toSend = dequeueNotification();
-			if (toSend != null || closed)
-				return toSend;
-	
-			// Nothing to do, sleep until interrupted.
-			try {
-				Thread.sleep(1000000000);
-			} catch (InterruptedException e) {}
+			synchronized (senderThread) {
+				String toSend = dequeueNotification();
+				if (toSend != null || closed)
+					return toSend;
+
+				// Nothing to do, sleep until interrupted.
+				try {
+					senderThread.wait();
+				} catch (InterruptedException e) {}
+			}
 		}
 	}
 
@@ -186,6 +188,7 @@ public class SystemdNotify extends StatusProxy {
 				}
 			}
 		};
+		senderThread.start();
 	}
 
 	/**
@@ -196,7 +199,9 @@ public class SystemdNotify extends StatusProxy {
 	 */
 	private void stopSenderThread(long timeout) {
 		closed = true;
-		senderThread.notifyAll();
+		synchronized (senderThread) {
+			senderThread.notifyAll();
+		}
 		try {
 			senderThread.join(timeout);
 		} catch (InterruptedException e) {}
@@ -209,7 +214,9 @@ public class SystemdNotify extends StatusProxy {
 	 */
 	private void queueNotification() {
 		if (watchdogTimer.dequeueUpdate() || hasQueuedNotifications()) {
-			senderThread.notifyAll();
+			synchronized (senderThread) {
+				senderThread.notifyAll();
+			}
 		}
 	}
 
