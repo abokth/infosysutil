@@ -30,33 +30,20 @@ public class RateLimitTimer {
 	}
 
 	/**
-	 * Sleep until at least one second has passed since register() was called.
+	 * obj.wait() until at least one second has passed since register() was called.
 	 */
-	public void waitFor() {
+	public void waitOn(Object obj) {
 		if (lastRegister != null) {
 			do {
 				long sleeptime = limit - lastRegister.elapsed();
 				if (sleeptime > 0)
 					try {
-						Thread.sleep(sleeptime);
+						obj.wait(sleeptime);
 					} catch (InterruptedException e) {}
 				else
 					break;
 			} while (true);
 		}
-	}
-
-	/**
-	 * Sleep for limit() amount of time.
-	 * 
-	 * A subsequent call to waitFor() will return immediately.
-	 */
-	public void delay() {
-		// Register that we're sending a notification.
-		register();
-	
-		// Ensure that at least one second has passed since the last notification.
-		waitFor();
 	}
 
 }

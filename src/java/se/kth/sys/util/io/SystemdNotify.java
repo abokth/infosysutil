@@ -139,16 +139,18 @@ public class SystemdNotify extends StatusProxy {
 	 */
 	private String waitForNotification() {
 		while (true) {
-			synchronized (senderThread) {
-				String toSend = dequeueNotification();
-				if (toSend != null || closed)
-					return toSend;
+			// A Java object notification should come only as a result of a status update from the service.
+			try {
+				senderThread.wait();
+			} catch (InterruptedException e) {}
+			
+			// Possibly wait a bit longer, while releasing the lock so notifications can be sent to senderThread.
+			rateLimitTimer.waitOn(senderThread);
 
-				// Nothing to do, sleep until interrupted.
-				try {
-					senderThread.wait();
-				} catch (InterruptedException e) {}
-			}
+			// We have a notification to senderThread, return the latest status notification.
+			String toSend = dequeueNotification();
+			if (toSend != null || closed)
+				return toSend;
 		}
 	}
 
@@ -166,6 +168,7 @@ public class SystemdNotify extends StatusProxy {
 	
 		// Actually send the string to the socket.
 		send(notificationString);
+		rateLimitTimer.register();
 		return true;
 	}
 
@@ -176,15 +179,17 @@ public class SystemdNotify extends StatusProxy {
 		senderThread = new Thread() {
 			@Override
 			public void run() {
-				try {
-					while (waitAndSendNotification())
-						rateLimitTimer.delay();
-				} catch (Exception e) {
-					// The watchdog will receive no more notifications after this.
-					e.printStackTrace();
-				} finally {
-					closed = true;
-					close();
+				synchronized (senderThread) {
+					try {
+						while (waitAndSendNotification())
+							{};
+					} catch (Exception e) {
+						// The watchdog will receive no more notifications after this.
+						e.printStackTrace();
+					} finally {
+						closed = true;
+						close();
+					}
 				}
 			}
 		};
