@@ -72,7 +72,7 @@ public class StatusFile extends StatusProxy {
 
 	/**
 	 * Initializes and returns an instance of StatusFile if the matching
-	 * environment variables are found, else returns null.
+	 * environment variables are found and initialization succeeds, else returns null.
 	 * 
 	 * @return an instance of StatusFile or null
 	 */
@@ -92,6 +92,7 @@ public class StatusFile extends StatusProxy {
 			} catch (IOException e) {
 				// TODO Automatiskt genererat catch-block
 				e.printStackTrace();
+				return null;
 			}
 			return instance;
 		}
@@ -115,7 +116,6 @@ public class StatusFile extends StatusProxy {
 
 	/**
 	 * Generate the content of the status file and write it.
-	 * Accordingly resets the watchdog update flag.
 	 */
 	private void writeStatus() {
 		String statusstring = serviceState + " " + Integer.toString(counter++) + " " + statusText;
@@ -126,6 +126,12 @@ public class StatusFile extends StatusProxy {
 		} catch (IOException e) {}
 	}
 
+	/**
+	 * Generate the content of the status file and write it,
+	 * given a new status text.
+	 * 
+	 * @param s describes the current status
+	 */
 	private void writeStatus(String s) {
 		statusText = s;
 		writeStatus();
@@ -143,7 +149,7 @@ public class StatusFile extends StatusProxy {
 	 * Call writeStatus() if a watchdog update is needed or the status
 	 * text has changed.
 	 * 
-	 * @param s Describes the current status
+	 * @param s describes the current status
 	 */
 	private void writeOldStatus(String s) {
 		if (watchdogTimer.dequeueUpdate() || statusText == null || !statusText.equals(s))

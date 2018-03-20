@@ -1,5 +1,15 @@
 package se.kth.sys.util;
 
+/**
+ * A timer for limiting the frequency of an operation.
+ * 
+ * register() and waitFor() can be called separately if other work is done in between.
+ * 
+ * delay() simply sleeps the required amount of time.
+ * 
+ * @author abo
+ *
+ */
 public class RateLimitTimer {
 	private SimpleTimer lastRegister = null;
 	private long limit;
@@ -37,7 +47,9 @@ public class RateLimitTimer {
 	}
 
 	/**
+	 * Sleep for limit() amount of time.
 	 * 
+	 * A subsequent call to waitFor() will return immediately.
 	 */
 	public void delay() {
 		// Register that we're sending a notification.

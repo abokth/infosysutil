@@ -104,7 +104,9 @@ public class SystemdNotify extends StatusProxy {
 	}
 
 	/**
-	 * @param socketfile
+	 * Connect to the named socket and sets is as the socket used to report status.
+	 * 
+	 * @param socketfile path to the socket file
 	 * @throws IOException
 	 */
 	private void connect(String socketfile) throws IOException {
@@ -113,21 +115,27 @@ public class SystemdNotify extends StatusProxy {
 	}
 
 	/**
-	 * @param s
+	 * Send a string to the status socket.
+	 * 
+	 * @param s string to send
 	 */
 	private void send(String s) {
 		socket.send(s);
 	}
 
 	/**
-	 * 
+	 * Close the status socket.
 	 */
 	private void close() {
 		socket.close();
 	}
 
 	/**
-	 * @return
+	 * Waits for changes in state or an update from the service after the watchdog timer has expired.
+	 * Builds a notification string and returns it. If the current state has been sent and notifications
+	 * have ended, null is returned.
+	 * 
+	 * @return a String in sd_notify format, or null
 	 */
 	private String waitForNotification() {
 		while (true) {
@@ -143,7 +151,11 @@ public class SystemdNotify extends StatusProxy {
 	}
 
 	/**
-	 * @return
+	 * Waits for changes in state or an update from the service after the watchdog timer has expired.
+	 * Builds a notification string and sends it. If the current state has been sent and notifications
+	 * have ended, false is returned, otherwise true.
+	 * 
+	 * @return true if the method should be called again, otherwise false
 	 */
 	private boolean waitAndSendNotification() {
 		String notificationString = waitForNotification();
@@ -156,7 +168,7 @@ public class SystemdNotify extends StatusProxy {
 	}
 
 	/**
-	 * 
+	 * Starts a thread which sends notifications when required and allowed.
 	 */
 	private void startSenderThread() {
 		senderThread = new Thread() {
@@ -177,7 +189,10 @@ public class SystemdNotify extends StatusProxy {
 	}
 
 	/**
-	 * @param timeout
+	 * Signals the notification thread started by startSenderThread() to stop and waits the given
+	 * amount of time until all notifications have been sent.
+	 * 
+	 * @param timeout number of milliseconds to wait
 	 */
 	private void stopSenderThread(long timeout) {
 		closed = true;
@@ -199,7 +214,7 @@ public class SystemdNotify extends StatusProxy {
 	}
 
 	/**
-	 * 
+	 * Signals notifications should cease, and waits a small amount of time for the last one to be sent.
 	 */
 	private void endNotifications() {
 		watchdogTimer.stop();
@@ -207,6 +222,8 @@ public class SystemdNotify extends StatusProxy {
 	}
 
 	/**
+	 * Query of changed state needs to be sent.
+	 * 
 	 * @return true if there are updates needed to be sent, otherwise false
 	 */
 	private boolean hasQueuedNotifications() {
@@ -214,7 +231,9 @@ public class SystemdNotify extends StatusProxy {
 	}
 
 	/**
-	 * @return
+	 * Check if the current running state has been sent, and acknowledges sending it if not.
+	 * 
+	 * @return true if the running state has not been sent, otherwise false
 	 */
 	private boolean dequeueRunningStateNotification() {
 		if (sentReady != sendReady) {
@@ -225,7 +244,9 @@ public class SystemdNotify extends StatusProxy {
 	}
 
 	/**
-	 * @return
+	 * Check if the current stopping state has been sent, and acknowledges sending it if not.
+	 * 
+	 * @return true if the stopping state has not been sent, otherwise false
 	 */
 	private boolean dequeueStoppingStateNotification() {
 		if (sentStopping != sendStopping) {
@@ -237,7 +258,9 @@ public class SystemdNotify extends StatusProxy {
 	}
 
 	/**
-	 * @return
+	 * Check if the current status text has been sent, and acknowledges sending it if not.
+	 * 
+	 * @return true if the status text has not been sent, otherwise false
 	 */
 	private boolean dequeueStatusNotification() {
 		if (statusText != null && (sentStatusText == null || !statusText.equals(sentStatusText))) {

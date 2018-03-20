@@ -5,12 +5,20 @@ import java.io.OutputStreamWriter;
 
 import se.kth.sys.util.lang.SystemCommandHandler;
 
+/**
+ * Connects to a named socket.
+ * 
+ * @author abo
+ *
+ */
 public class UnixSocket {
 	private SystemCommandHandler socketCommand = null;
 	private OutputStreamWriter socketWriter = null;
 
 	/**
-	 * @param socket
+	 * Connect to a named socket
+	 * 
+	 * @param socket path to the socket
 	 * @throws IOException
 	 */
 	void connect(String socket) throws IOException {
@@ -21,7 +29,7 @@ public class UnixSocket {
 	}
 
 	/**
-	 * 
+	 * Close the connection
 	 */
 	void close() {
 		try {
@@ -39,7 +47,9 @@ public class UnixSocket {
 	}
 
 	/**
-	 * @param s
+	 * Send a string to the socket.
+	 * 
+	 * @param s string to send
 	 */
 	void send(String s) {
 		try {
