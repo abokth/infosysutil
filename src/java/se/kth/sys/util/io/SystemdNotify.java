@@ -12,83 +12,19 @@ import se.kth.sys.util.WatchdogTimer;
  *
  */
 public class SystemdNotify extends StatusProxy {
-	boolean sendReady = false, sentReady = false;
-	boolean sendStopping = false, sentStopping = false;
-	String statusText = null, sentStatusText = null;
+	private boolean sendReady = false, sentReady = false;
+	private boolean sendStopping = false, sentStopping = false;
+	private String statusText = null, sentStatusText = null;
 
 	private WatchdogTimer watchdogTimer;
 
-	Thread senderThread;
+	private Thread senderThread;
 	private boolean closed = false;
 
-	private UnixSocket socket;
 	private RateLimitTimer rateLimitTimer;
 
-	String watchdogargs = null;
-
-	/**
-	 * @return true if there are updates needed to be sent, otherwise false
-	 */
-	private boolean hasQueuedNotifications() {
-		return sentReady != sendReady || sentStopping != sendStopping || (statusText != null && (sentStatusText == null || !statusText.equals(sentStatusText)));
-	}
-
-	/**
-	 * @return
-	 */
-	private boolean dequeueRunningStateNotification() {
-		if (sentReady != sendReady) {
-			sentReady = true;
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * @return
-	 */
-	private boolean dequeueStoppingStateNotification() {
-		if (sentStopping != sendStopping) {
-			sendReady = true; sentReady = true; // or it's too late anyway
-			sentStopping = true;
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * @return
-	 */
-	private boolean dequeueStatusNotification() {
-		if (statusText != null && (sentStatusText == null || !statusText.equals(sentStatusText))) {
-			sentStatusText = statusText;
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * @param socketfile
-	 * @throws IOException
-	 */
-	private void connect(String socketfile) throws IOException {
-		socket = new UnixSocket();
-		socket.connect(socketfile);
-	}
-
-	/**
-	 * @param s
-	 */
-	private void send(String s) {
-		socket.send(s);
-	}
-
-	/**
-	 * 
-	 */
-	private void disconnect() {
-		socket.close();
-	}
+	private String watchdogargs = null;
+	private UnixSocket socket;
 
 	/**
 	 * Initializes and returns an instance of SystemdNotify if the matching
@@ -168,6 +104,29 @@ public class SystemdNotify extends StatusProxy {
 	}
 
 	/**
+	 * @param socketfile
+	 * @throws IOException
+	 */
+	private void connect(String socketfile) throws IOException {
+		socket = new UnixSocket();
+		socket.connect(socketfile);
+	}
+
+	/**
+	 * @param s
+	 */
+	private void send(String s) {
+		socket.send(s);
+	}
+
+	/**
+	 * 
+	 */
+	private void close() {
+		socket.close();
+	}
+
+	/**
 	 * @return
 	 */
 	private String waitForNotification() {
@@ -175,7 +134,7 @@ public class SystemdNotify extends StatusProxy {
 			String toSend = dequeueNotification();
 			if (toSend != null || closed)
 				return toSend;
-
+	
 			// Nothing to do, sleep until interrupted.
 			try {
 				Thread.sleep(1000000000);
@@ -184,24 +143,16 @@ public class SystemdNotify extends StatusProxy {
 	}
 
 	/**
-	 * 
+	 * @return
 	 */
-	private void sendNotificationsWhileOpen() {
-		while (true) {
-			// Ensure that at least one second has passed since the last notification.
-			rateLimitTimer.waitFor();
-
-			// Will return null if endNotifications() was called.
-			String notificationString = waitForNotification();
-			if (notificationString == null)
-				break;
-
-			// Register that we're sending a notification.
-			rateLimitTimer.register();
-
-			// Actually send the string to the socket.
-			send(notificationString);
-		}
+	private boolean waitAndSendNotification() {
+		String notificationString = waitForNotification();
+		if (notificationString == null)
+			return false;
+	
+		// Actually send the string to the socket.
+		send(notificationString);
+		return true;
 	}
 
 	/**
@@ -212,14 +163,15 @@ public class SystemdNotify extends StatusProxy {
 			@Override
 			public void run() {
 				try {
-					sendNotificationsWhileOpen();
+					while (waitAndSendNotification())
+						rateLimitTimer.delay();
 				} catch (Exception e) {
 					// The watchdog will receive no more notifications after this.
 					e.printStackTrace();
+				} finally {
 					closed = true;
+					close();
 				}
-
-				disconnect();
 			}
 		};
 	}
@@ -252,6 +204,47 @@ public class SystemdNotify extends StatusProxy {
 	private void endNotifications() {
 		watchdogTimer.stop();
 		stopSenderThread(rateLimitTimer.getLimit() * 2);
+	}
+
+	/**
+	 * @return true if there are updates needed to be sent, otherwise false
+	 */
+	private boolean hasQueuedNotifications() {
+		return sentReady != sendReady || sentStopping != sendStopping || (statusText != null && (sentStatusText == null || !statusText.equals(sentStatusText)));
+	}
+
+	/**
+	 * @return
+	 */
+	private boolean dequeueRunningStateNotification() {
+		if (sentReady != sendReady) {
+			sentReady = true;
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * @return
+	 */
+	private boolean dequeueStoppingStateNotification() {
+		if (sentStopping != sendStopping) {
+			sendReady = true; sentReady = true; // or it's too late anyway
+			sentStopping = true;
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * @return
+	 */
+	private boolean dequeueStatusNotification() {
+		if (statusText != null && (sentStatusText == null || !statusText.equals(sentStatusText))) {
+			sentStatusText = statusText;
+			return true;
+		}
+		return false;
 	}
 
 	@Override

@@ -36,4 +36,15 @@ public class RateLimitTimer {
 		}
 	}
 
+	/**
+	 * 
+	 */
+	public void delay() {
+		// Register that we're sending a notification.
+		register();
+	
+		// Ensure that at least one second has passed since the last notification.
+		waitFor();
+	}
+
 }
