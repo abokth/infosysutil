@@ -17,8 +17,8 @@ import java.util.TimerTask;
  */
 public class WatchdogTimer {
 
-	private boolean need_watchdog_update = false;
-	private Timer watchdogExpirerTimer = null;
+	private boolean need_watchdog_update = true;
+	private Timer watchdogExpirerTimer = new Timer();
 
 	/**
 	 * Create a watchdog with the given maximum period.
@@ -28,8 +28,6 @@ public class WatchdogTimer {
 	 * @param watchdog_msec maximum amount of time between each watchdog update
 	 */
 	public WatchdogTimer(final long watchdog_msec) {
-		need_watchdog_update = true;
-		watchdogExpirerTimer = new Timer();
 		watchdogExpirerTimer.schedule(new TimerTask() {
 			@Override
 			public void run() {
@@ -60,7 +58,6 @@ public class WatchdogTimer {
 	 */
 	public void stop() {
 		watchdogExpirerTimer.cancel();
-		watchdogExpirerTimer = null;
 	}
 
 }
